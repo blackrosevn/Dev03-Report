@@ -156,11 +156,7 @@
         const statusChart = new Chart(ctx, {
             type: 'pie',
             data: {
-                labels: [
-                    document.getElementById('dashboard.submitted_reports').innerText || 'Submitted',
-                    document.getElementById('dashboard.pending_reports').innerText || 'Pending',
-                    document.getElementById('dashboard.overdue_reports').innerText || 'Overdue'
-                ],
+                labels: ['Submitted', 'Pending', 'Overdue'],
                 datasets: [{
                     data: [{{ submitted_reports }}, {{ pending_reports }}, {{ overdue_reports }}],
                     backgroundColor: [
