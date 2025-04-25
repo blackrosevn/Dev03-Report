@@ -52,14 +52,23 @@ function applyTranslations() {
             }
             
             // Store the translation as a hidden element for reference by JavaScript
-            if (!document.getElementById(key)) {
-                const hiddenElement = document.createElement('span');
-                hiddenElement.id = key;
-                hiddenElement.style.display = 'none';
-                hiddenElement.textContent = translation;
-                document.body.appendChild(hiddenElement);
-            } else {
-                document.getElementById(key).textContent = translation;
+            try {
+                if (!document.getElementById(key)) {
+                    const hiddenElement = document.createElement('span');
+                    hiddenElement.id = key;
+                    hiddenElement.style.display = 'none';
+                    hiddenElement.textContent = translation;
+                    if (document.body) {
+                        document.body.appendChild(hiddenElement);
+                    }
+                } else {
+                    const existingElement = document.getElementById(key);
+                    if (existingElement) {
+                        existingElement.textContent = translation;
+                    }
+                }
+            } catch (e) {
+                console.warn('Error storing translation reference:', e);
             }
         }
     });
