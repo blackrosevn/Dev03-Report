@@ -1,0 +1,20 @@
+System Accounts Information
+=========================
+
+Database:
+- Host: localhost
+- Database: vinatex
+- Username: vinatex
+- Password: vinatex@2024
+
+Service Account:
+- User: www-data
+- Service: vinatex.service
+- Port: 5000
+
+Web Server:
+- Nginx configuration: /etc/nginx/sites-available/vinatex
+- Port: 80
+
+Environment Variables:
+- Location: /home/runner/workspace/.env
