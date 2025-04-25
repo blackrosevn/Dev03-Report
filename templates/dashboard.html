@@ -10,6 +10,7 @@
             <a href="{{ url_for('report_assignments') }}" class="btn btn-sm btn-outline-secondary" data-i18n="dashboard.view_reports">View Reports</a>
             {% if current_user.is_admin() %}
             <a href="{{ url_for('initialize_sample_data') }}" class="btn btn-sm btn-outline-secondary" data-i18n="dashboard.initialize_data">Initialize Sample Data</a>
+            <a href="{{ url_for('initialize_sample_assignments') }}" class="btn btn-sm btn-outline-secondary" data-i18n="dashboard.initialize_assignments">Initialize Sample Assignments</a>
             {% endif %}
         </div>
     </div>

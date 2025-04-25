@@ -1028,6 +1028,103 @@ def initialize_sample_data():
 
     return redirect(url_for('dashboard'))
 
+@app.route('/initialize_sample_assignments')
+@login_required
+def initialize_sample_assignments():
+    # Only admin can initialize sample assignments
+    if not current_user.is_admin():
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    # Check if there are already assignments
+    if ReportAssignment.query.first():
+        flash('Sample assignments already exist. To reset, please use the database management tools.', 'info')
+        return redirect(url_for('dashboard'))
+    
+    # Get templates
+    templates = ReportTemplate.query.filter_by(is_active=True).all()
+    if not templates:
+        flash('No report templates found. Please initialize sample data first.', 'warning')
+        return redirect(url_for('dashboard'))
+    
+    # Get organizations (excluding root Vinatex)
+    orgs = Organization.query.filter(Organization.parent_id.isnot(None)).filter_by(is_active=True).all()
+    if not orgs:
+        flash('No member organizations found. Please add member organizations first.', 'warning')
+        return redirect(url_for('dashboard'))
+    
+    # Create assignments
+    assignments_count = 0
+    today = datetime.now()
+    next_month = today + timedelta(days=30)
+    
+    try:
+        # Financial reports for all orgs
+        financial_template = ReportTemplate.query.filter(ReportTemplate.name.like('%tài chính%')).first()
+        if financial_template:
+            for org in orgs:
+                assignment = ReportAssignment(
+                    report_template_id=financial_template.id,
+                    organization_id=org.id,
+                    due_date=next_month,
+                    frequency=ReportFrequency.MONTHLY,
+                    status=ReportStatus.PENDING
+                )
+                db.session.add(assignment)
+                assignments_count += 1
+        
+        # Production reports for all orgs
+        production_template = ReportTemplate.query.filter(ReportTemplate.name.like('%sản xuất%')).first()
+        if production_template:
+            for org in orgs:
+                assignment = ReportAssignment(
+                    report_template_id=production_template.id,
+                    organization_id=org.id,
+                    due_date=next_month,
+                    frequency=ReportFrequency.MONTHLY,
+                    status=ReportStatus.PENDING
+                )
+                db.session.add(assignment)
+                assignments_count += 1
+        
+        # Investment plan for specific orgs (first 3)
+        investment_template = ReportTemplate.query.filter(ReportTemplate.name.like('%kế hoạch đầu tư%')).first()
+        if investment_template and len(orgs) >= 3:
+            for org in orgs[:3]:
+                assignment = ReportAssignment(
+                    report_template_id=investment_template.id,
+                    organization_id=org.id,
+                    due_date=next_month + timedelta(days=30),  # Due in 2 months
+                    frequency=ReportFrequency.QUARTERLY,
+                    status=ReportStatus.PENDING
+                )
+                db.session.add(assignment)
+                assignments_count += 1
+        
+        # Create a past-due assignment for demonstration
+        if financial_template and orgs:
+            last_month = today - timedelta(days=15)
+            assignment = ReportAssignment(
+                report_template_id=financial_template.id,
+                organization_id=orgs[0].id,
+                due_date=last_month,
+                frequency=ReportFrequency.MONTHLY,
+                status=ReportStatus.OVERDUE
+            )
+            db.session.add(assignment)
+            assignments_count += 1
+        
+        db.session.commit()
+        log_action(current_user.id, 'initialize_sample_assignments', f'Initialized {assignments_count} sample assignments', request.remote_addr)
+        flash(f'Successfully created {assignments_count} sample report assignments!', 'success')
+    
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error creating sample assignments: {str(e)}")
+        flash(f'Error creating sample assignments: {str(e)}', 'danger')
+    
+    return redirect(url_for('report_assignments'))
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('error.html', error="404 - Page Not Found"), 404
