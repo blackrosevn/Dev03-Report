@@ -1,0 +1,199 @@
+/* Vinatex Report Portal - Custom Stylesheet */
+
+/* Root variables */
+:root {
+    --vinatex-primary: #005ea8;
+    --vinatex-secondary: #e31837;
+    --vinatex-light: #f5f5f5;
+    --vinatex-dark: #303030;
+}
+
+/* General styling */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+    padding-bottom: 2rem;
+}
+
+/* Sidebar tweaks */
+.sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    padding: 48px 0 0;
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+}
+
+.sidebar-sticky {
+    position: relative;
+    top: 0;
+    height: calc(100vh - 48px);
+    padding-top: .5rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* Nav links styling */
+.sidebar .nav-link {
+    font-weight: 500;
+    color: var(--bs-gray-600);
+}
+
+.sidebar .nav-link.active {
+    color: var(--bs-primary);
+}
+
+.sidebar .nav-link:hover {
+    color: var(--bs-primary);
+}
+
+.sidebar .nav-link .feather {
+    margin-right: 4px;
+    width: 16px;
+    height: 16px;
+}
+
+/* Dashboard card tweaks */
+.card {
+    margin-bottom: 1.5rem;
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-header {
+    font-weight: 500;
+    background-color: rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+/* Form styling */
+.form-label {
+    font-weight: 500;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Table enhancements */
+.table-responsive {
+    margin-bottom: 1rem;
+}
+
+.table th {
+    font-weight: 600;
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* Badges */
+.badge {
+    font-weight: 500;
+    padding: 0.4em 0.6em;
+}
+
+/* Login and auth pages */
+.auth-container {
+    max-width: 400px;
+    margin: 2rem auto;
+}
+
+/* Report template builder */
+.sheet-card {
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    margin-bottom: 1rem;
+}
+
+.field-card {
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 0.25rem;
+}
+
+/* Feather icon alignment */
+.feather {
+    vertical-align: text-bottom;
+}
+
+/* Footer */
+.footer {
+    margin-top: auto;
+    padding: 1rem 0;
+    color: var(--bs-gray-600);
+    background-color: var(--bs-dark);
+}
+
+/* Language selector */
+.language-selector {
+    margin-left: 1rem;
+}
+
+/* Navbar tweaks */
+.navbar-brand {
+    padding-top: .75rem;
+    padding-bottom: .75rem;
+    font-size: 1rem;
+    background-color: rgba(0, 0, 0, .25);
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .25);
+}
+
+/* Custom buttons */
+.btn-vinatex-primary {
+    background-color: var(--vinatex-primary);
+    border-color: var(--vinatex-primary);
+    color: white;
+}
+
+.btn-vinatex-secondary {
+    background-color: var(--vinatex-secondary);
+    border-color: var(--vinatex-secondary);
+    color: white;
+}
+
+/* Report submission form */
+.tab-content {
+    border-left: 1px solid rgba(0, 0, 0, 0.125);
+    border-right: 1px solid rgba(0, 0, 0, 0.125);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    border-bottom-left-radius: 0.25rem;
+    border-bottom-right-radius: 0.25rem;
+}
+
+/* For print media */
+@media print {
+    .sidebar, .navbar, .footer, .btn-toolbar {
+        display: none !important;
+    }
+    
+    main {
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+    .sidebar {
+        top: 5rem;
+    }
+    
+    .navbar-brand {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+        text-align: left;
+        background-color: transparent;
+        box-shadow: none;
+    }
+}

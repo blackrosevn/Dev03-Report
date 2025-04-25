@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Report Assignments | Vinatex Report Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2" data-i18n="assignments.title">Report Assignments</h1>
+    {% if current_user.is_admin() or current_user.is_department() %}
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addAssignmentModal">
+            <i data-feather="plus"></i> <span data-i18n="assignments.add_assignment">Assign Report</span>
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+{% if add %}
+<!-- This is shown when the add parameter is true, but modal is preferred -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header" data-i18n="assignments.add_title">Assign a Report</div>
+            <div class="card-body">
+                <form method="post">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        <label for="report_template" class="form-label" data-i18n="assignments.report_template">Report Template</label>
+                        {{ form.report_template(class="form-select" + (" is-invalid" if form.report_template.errors else "")) }}
+                        {% for error in form.report_template.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="organization" class="form-label" data-i18n="assignments.organization">Organization</label>
+                        {{ form.organization(class="form-select" + (" is-invalid" if form.organization.errors else "")) }}
+                        {% for error in form.organization.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="due_date" class="form-label" data-i18n="assignments.due_date">Due Date</label>
+                        {{ form.due_date(class="form-control" + (" is-invalid" if form.due_date.errors else ""), type="date") }}
+                        {% for error in form.due_date.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="frequency" class="form-label" data-i18n="assignments.frequency">Frequency</label>
+                        {{ form.frequency(class="form-select" + (" is-invalid" if form.frequency.errors else "")) }}
+                        {% for error in form.frequency.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('report_assignments') }}" class="btn btn-secondary" data-i18n="common.cancel">Cancel</a>
+                        {{ form.submit(class="btn btn-primary", **{'data-i18n': 'assignments.assign'}) }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+
+<!-- Assignment List -->
+{% if assignments %}
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th data-i18n="assignments.report">Report</th>
+                <th data-i18n="assignments.organization">Organization</th>
+                <th data-i18n="assignments.due_date">Due Date</th>
+                <th data-i18n="assignments.frequency">Frequency</th>
+                <th data-i18n="assignments.status">Status</th>
+                <th data-i18n="assignments.actions">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for assignment, organization, template in assignments %}
+            <tr>
+                <td>{{ template.name }}</td>
+                <td>{{ organization.name }}</td>
+                <td>{{ assignment.due_date.strftime('%Y-%m-%d') }}</td>
+                <td data-i18n="frequency.{{ assignment.frequency.value }}">
+                    {{ {
+                        'daily': 'Daily',
+                        'weekly': 'Weekly',
+                        'monthly': 'Monthly',
+                        'quarterly': 'Quarterly',
+                        'semi_annually': 'Semi-Annually',
+                        'annually': 'Annually',
+                        'one_time': 'One-Time'
+                    }[assignment.frequency.value] }}
+                </td>
+                <td>
+                    {% if assignment.status.value == 'pending' %}
+                    <span class="badge bg-warning text-dark" data-i18n="status.pending">Pending</span>
+                    {% elif assignment.status.value == 'submitted' %}
+                    <span class="badge bg-success" data-i18n="status.submitted">Submitted</span>
+                    {% elif assignment.status.value == 'approved' %}
+                    <span class="badge bg-primary" data-i18n="status.approved">Approved</span>
+                    {% elif assignment.status.value == 'rejected' %}
+                    <span class="badge bg-danger" data-i18n="status.rejected">Rejected</span>
+                    {% elif assignment.status.value == 'overdue' %}
+                    <span class="badge bg-danger" data-i18n="status.overdue">Overdue</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if assignment.organization_id == current_user.organization_id and assignment.status.value == 'pending' %}
+                    <a href="{{ url_for('submit_report', assignment_id=assignment.id) }}" class="btn btn-sm btn-primary" data-i18n="assignments.submit">Submit</a>
+                    {% else %}
+                    <a href="{{ url_for('view_report_submission', assignment_id=assignment.id) }}" class="btn btn-sm btn-info" data-i18n="assignments.view">View</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info" data-i18n="assignments.no_assignments">No report assignments found.</div>
+{% endif %}
+{% endif %}
+
+<!-- Add Assignment Modal -->
+<div class="modal fade" id="addAssignmentModal" tabindex="-1" aria-labelledby="addAssignmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addAssignmentModalLabel" data-i18n="assignments.add_title">Assign a Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{{ url_for('add_report_assignment') }}">
+                <div class="modal-body">
+                    {{ form.hidden_tag() if form }}
+                    <div class="mb-3">
+                        <label for="report_template" class="form-label" data-i18n="assignments.report_template">Report Template</label>
+                        <select name="report_template" id="report_template" class="form-select" required>
+                            {% if form and form.report_template.choices %}
+                                {% for value, label in form.report_template.choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="organization" class="form-label" data-i18n="assignments.organization">Organization</label>
+                        <select name="organization" id="organization" class="form-select" required>
+                            {% if form and form.organization.choices %}
+                                {% for value, label in form.organization.choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="due_date" class="form-label" data-i18n="assignments.due_date">Due Date</label>
+                        <input type="date" name="due_date" id="due_date" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="frequency" class="form-label" data-i18n="assignments.frequency">Frequency</label>
+                        <select name="frequency" id="frequency" class="form-select" required>
+                            <option value="daily" data-i18n="frequency.daily">Daily</option>
+                            <option value="weekly" data-i18n="frequency.weekly">Weekly</option>
+                            <option value="monthly" data-i18n="frequency.monthly">Monthly</option>
+                            <option value="quarterly" data-i18n="frequency.quarterly">Quarterly</option>
+                            <option value="semi_annually" data-i18n="frequency.semi_annually">Semi-Annually</option>
+                            <option value="annually" data-i18n="frequency.annually">Annually</option>
+                            <option value="one_time" data-i18n="frequency.one_time">One-Time</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="common.cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" data-i18n="assignments.assign">Assign Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "View" if view_only else "Submit" }} Report | Vinatex Report Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2" data-i18n="{{ 'submissions.view_title' if view_only else 'submissions.submit_title' }}">
+        {{ "View Report" if view_only else "Submit Report" }}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('report_assignments') }}" class="btn btn-sm btn-outline-secondary">
+            <i data-feather="arrow-left"></i> <span data-i18n="common.back">Back</span>
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0" data-i18n="submissions.report_details">Report Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4" data-i18n="submissions.organization">Organization:</dt>
+                            <dd class="col-sm-8">{{ organization.name }}</dd>
+                            
+                            <dt class="col-sm-4" data-i18n="submissions.report_name">Report Name:</dt>
+                            <dd class="col-sm-8">{{ template.name }}</dd>
+                            
+                            <dt class="col-sm-4" data-i18n="submissions.description">Description:</dt>
+                            <dd class="col-sm-8">{{ template.description }}</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4" data-i18n="submissions.due_date">Due Date:</dt>
+                            <dd class="col-sm-8">{{ assignment.due_date.strftime('%Y-%m-%d') }}</dd>
+                            
+                            <dt class="col-sm-4" data-i18n="submissions.frequency">Frequency:</dt>
+                            <dd class="col-sm-8" data-i18n="frequency.{{ assignment.frequency.value }}">
+                                {{ {
+                                    'daily': 'Daily',
+                                    'weekly': 'Weekly',
+                                    'monthly': 'Monthly',
+                                    'quarterly': 'Quarterly',
+                                    'semi_annually': 'Semi-Annually',
+                                    'annually': 'Annually',
+                                    'one_time': 'One-Time'
+                                }[assignment.frequency.value] }}
+                            </dd>
+                            
+                            <dt class="col-sm-4" data-i18n="submissions.status">Status:</dt>
+                            <dd class="col-sm-8">
+                                {% if assignment.status.value == 'pending' %}
+                                <span class="badge bg-warning text-dark" data-i18n="status.pending">Pending</span>
+                                {% elif assignment.status.value == 'submitted' %}
+                                <span class="badge bg-success" data-i18n="status.submitted">Submitted</span>
+                                {% elif assignment.status.value == 'approved' %}
+                                <span class="badge bg-primary" data-i18n="status.approved">Approved</span>
+                                {% elif assignment.status.value == 'rejected' %}
+                                <span class="badge bg-danger" data-i18n="status.rejected">Rejected</span>
+                                {% elif assignment.status.value == 'overdue' %}
+                                <span class="badge bg-danger" data-i18n="status.overdue">Overdue</span>
+                                {% endif %}
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if view_only %}
+<!-- Previous Submissions -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0" data-i18n="submissions.history">Submission History</h5>
+            </div>
+            <div class="card-body">
+                {% if submissions %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th data-i18n="submissions.submitted_by">Submitted By</th>
+                                <th data-i18n="submissions.submitted_at">Submission Date</th>
+                                <th data-i18n="submissions.notes">Notes</th>
+                                <th data-i18n="submissions.file">File</th>
+                                <th data-i18n="submissions.actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for submission in submissions %}
+                            <tr>
+                                <td>{{ submission.submitted_by_user.fullname }}</td>
+                                <td>{{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>{{ submission.notes }}</td>
+                                <td>
+                                    {% if submission.filename %}
+                                    <span class="badge bg-info">{{ submission.filename }}</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary" data-i18n="submissions.no_file">No file</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if submission.sharepoint_path %}
+                                    <a href="{{ url_for('download_report', submission_id=submission.id) }}" class="btn btn-sm btn-primary">
+                                        <i data-feather="download"></i> <span data-i18n="submissions.download">Download</span>
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info" data-i18n="submissions.no_submissions">No submissions found for this report.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<!-- Report Form Submission -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0" data-i18n="submissions.submit_form">Submit Report</h5>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs" id="reportTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="form-tab" data-bs-toggle="tab" data-bs-target="#form-tab-pane" type="button" role="tab" data-i18n="submissions.form_tab">
+                            Form Entry
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="file-tab" data-bs-toggle="tab" data-bs-target="#file-tab-pane" type="button" role="tab" data-i18n="submissions.file_tab">
+                            File Upload
+                        </button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="reportTabsContent">
+                    <!-- Form Entry Tab -->
+                    <div class="tab-pane fade show active p-3" id="form-tab-pane" role="tabpanel" aria-labelledby="form-tab" tabindex="0">
+                        <form id="reportForm" method="post" enctype="multipart/form-data">
+                            {{ form.hidden_tag() }}
+                            
+                            <!-- Container for the dynamic form fields -->
+                            <div id="dynamic-form">
+                                {% for sheet in template_structure.sheets %}
+                                <div class="mb-4">
+                                    <h4>{{ sheet.name }}</h4>
+                                    <div class="row g-3">
+                                        {% for field in sheet.fields %}
+                                        <div class="col-md-6">
+                                            <label for="{{ field.name }}" class="form-label">{{ field.label }}</label>
+                                            {% if field.type == 'text' %}
+                                            <input type="text" class="form-control" name="{{ field.name }}" id="{{ field.name }}" {% if field.required %}required{% endif %}>
+                                            {% elif field.type == 'number' %}
+                                            <input type="number" class="form-control" name="{{ field.name }}" id="{{ field.name }}" {% if field.required %}required{% endif %}>
+                                            {% elif field.type == 'date' %}
+                                            <input type="date" class="form-control" name="{{ field.name }}" id="{{ field.name }}" {% if field.required %}required{% endif %}>
+                                            {% endif %}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="notes" class="form-label" data-i18n="submissions.notes">Notes</label>
+                                {{ form.notes(class="form-control", rows="3") }}
+                            </div>
+                            
+                            {{ form.form_data(id="formDataField", hidden=true) }}
+                            
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ url_for('report_assignments') }}" class="btn btn-secondary" data-i18n="common.cancel">Cancel</a>
+                                {{ form.submit(class="btn btn-primary", id="submitFormBtn", **{'data-i18n': 'submissions.submit'}) }}
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- File Upload Tab -->
+                    <div class="tab-pane fade p-3" id="file-tab-pane" role="tabpanel" aria-labelledby="file-tab" tabindex="0">
+                        <form id="fileForm" method="post" enctype="multipart/form-data">
+                            {{ form.hidden_tag() }}
+                            
+                            <div class="mb-3">
+                                <label for="file" class="form-label" data-i18n="submissions.excel_file">Excel File</label>
+                                {{ form.file(class="form-control") }}
+                                <div class="form-text" data-i18n="submissions.file_help">Upload an Excel file with your report data. Make sure it matches the required template format.</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="notes" class="form-label" data-i18n="submissions.notes">Notes</label>
+                                {{ form.notes(class="form-control", rows="3") }}
+                            </div>
+                            
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ url_for('report_assignments') }}" class="btn btn-secondary" data-i18n="common.cancel">Cancel</a>
+                                {{ form.submit(class="btn btn-primary", **{'data-i18n': 'submissions.submit'}) }}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if not view_only %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const reportForm = document.getElementById('reportForm');
+        const formDataField = document.getElementById('formDataField');
+        const submitFormBtn = document.getElementById('submitFormBtn');
+        
+        // Handle form submission
+        reportForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Collect form data
+            const formData = {};
+            const dynamicForm = document.getElementById('dynamic-form');
+            
+            // Get all input fields in the form
+            const inputs = dynamicForm.querySelectorAll('input');
+            inputs.forEach(input => {
+                formData[input.id] = input.value;
+            });
+            
+            // Update the hidden form_data field
+            formDataField.value = JSON.stringify(formData);
+            
+            // Submit the form
+            this.submit();
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

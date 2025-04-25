@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}Reports Overview | Vinatex Report Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2" data-i18n="overview.title">Reports Overview</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="downloadReportChart()" data-i18n="overview.download_chart">
+                <i data-feather="download"></i> Download Chart
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Completion Rate Chart -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0" data-i18n="overview.completion_rate">Report Completion Rate by Organization</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="completionRateChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Status Chart -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0" data-i18n="overview.status_distribution">Report Status Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusDistributionChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Monthly Submission Trend -->
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0" data-i18n="overview.monthly_trend">Monthly Submission Trend</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyTrendChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Organization Performance Table -->
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0" data-i18n="overview.organization_performance">Organization Performance</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th data-i18n="overview.organization">Organization</th>
+                                <th data-i18n="overview.total_reports">Total Reports</th>
+                                <th data-i18n="overview.submitted">Submitted</th>
+                                <th data-i18n="overview.pending">Pending</th>
+                                <th data-i18n="overview.overdue">Overdue</th>
+                                <th data-i18n="overview.completion_rate">Completion Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in submission_stats %}
+                            <tr>
+                                <td>{{ stat.organization }}</td>
+                                <td>{{ stat.total }}</td>
+                                <td>{{ stat.submitted }}</td>
+                                <td>{{ stat.pending }}</td>
+                                <td>{{ stat.overdue }}</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ stat.completion_rate }}%;" aria-valuenow="{{ stat.completion_rate }}" aria-valuemin="0" aria-valuemax="100">{{ stat.completion_rate|round(1) }}%</div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Organization names for chart labels
+    const organizations = {{ org_names|tojson }};
+    
+    // Submission statistics
+    const submissionStats = {{ submission_stats|tojson }};
+    
+    // Monthly data
+    const monthlyData = {{ monthly_data|tojson }};
+    
+    // Extract data for completion rate chart
+    const completionRates = submissionStats.map(stat => stat.completion_rate);
+    const orgNames = submissionStats.map(stat => stat.organization);
+    
+    // Aggregate data for status distribution chart
+    let totalSubmitted = 0;
+    let totalPending = 0;
+    let totalOverdue = 0;
+    
+    submissionStats.forEach(stat => {
+        totalSubmitted += stat.submitted;
+        totalPending += stat.pending;
+        totalOverdue += stat.overdue;
+    });
+    
+    // Extract data for monthly trend chart
+    const months = monthlyData.map(data => data.month);
+    const counts = monthlyData.map(data => data.count);
+    
+    // Create charts
+    createCompletionRateChart(orgNames, completionRates);
+    createStatusDistributionChart(totalSubmitted, totalPending, totalOverdue);
+    createMonthlyTrendChart(months, counts);
+});
+
+function createCompletionRateChart(organizations, completionRates) {
+    const ctx = document.getElementById('completionRateChart').getContext('2d');
+    const completionRateChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: organizations,
+            datasets: [{
+                label: document.getElementById('overview.completion_rate').innerText || 'Completion Rate (%)',
+                data: completionRates,
+                backgroundColor: 'rgba(40, 167, 69, 0.6)',
+                borderColor: 'rgba(40, 167, 69, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: '%'
+                    }
+                }
+            }
+        }
+    });
+}
+
+function createStatusDistributionChart(submitted, pending, overdue) {
+    const ctx = document.getElementById('statusDistributionChart').getContext('2d');
+    const statusDistributionChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: [
+                document.getElementById('overview.submitted').innerText || 'Submitted',
+                document.getElementById('overview.pending').innerText || 'Pending',
+                document.getElementById('overview.overdue').innerText || 'Overdue'
+            ],
+            datasets: [{
+                data: [submitted, pending, overdue],
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.8)',
+                    'rgba(255, 193, 7, 0.8)',
+                    'rgba(220, 53, 69, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(40, 167, 69, 1)',
+                    'rgba(255, 193, 7, 1)',
+                    'rgba(220, 53, 69, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+function createMonthlyTrendChart(months, counts) {
+    const ctx = document.getElementById('monthlyTrendChart').getContext('2d');
+    const monthlyTrendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: [{
+                label: document.getElementById('overview.submissions').innerText || 'Submissions',
+                data: counts,
+                fill: false,
+                borderColor: 'rgba(13, 110, 253, 1)',
+                tension: 0.1,
+                pointBackgroundColor: 'rgba(13, 110, 253, 1)',
+                pointBorderColor: '#fff',
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Function to download chart as image
+function downloadReportChart() {
+    const canvas = document.getElementById('completionRateChart');
+    const image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+    const link = document.createElement('a');
+    link.download = 'vinatex-report-completion-rate.png';
+    link.href = image;
+    link.click();
+}
+</script>
+{% endblock %}

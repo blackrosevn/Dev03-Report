@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit User' if edit else 'Register New User' }} | Vinatex Report Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2" data-i18n="{{ 'user.edit_title' if edit else 'user.register_title' }}">{{ 'Edit User' if edit else 'Register New User' }}</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {{ form.hidden_tag() }}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="username" class="form-label" data-i18n="user.username">Username</label>
+                            {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else "")) }}
+                            {% for error in form.username.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label" data-i18n="user.email">Email</label>
+                            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                            {% for error in form.email.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-12">
+                            <label for="fullname" class="form-label" data-i18n="user.fullname">Full Name</label>
+                            {{ form.fullname(class="form-control" + (" is-invalid" if form.fullname.errors else "")) }}
+                            {% for error in form.fullname.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="role" class="form-label" data-i18n="user.role">Role</label>
+                            {{ form.role(class="form-select" + (" is-invalid" if form.role.errors else "")) }}
+                            {% for error in form.role.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="organization" class="form-label" data-i18n="user.organization">Organization</label>
+                            {{ form.organization(class="form-select" + (" is-invalid" if form.organization.errors else "")) }}
+                            {% for error in form.organization.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {% if edit %}
+                        <div class="col-12">
+                            <div class="form-check">
+                                {{ form.is_active(class="form-check-input") }}
+                                <label class="form-check-label" for="is_active" data-i18n="user.is_active">Active</label>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="col-md-6">
+                            <label for="password" class="form-label" data-i18n="user.password">Password</label>
+                            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
+                            {% for error in form.password.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="confirm_password" class="form-label" data-i18n="user.confirm_password">Confirm Password</label>
+                            {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else "")) }}
+                            {% for error in form.confirm_password.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ url_for('user_management') }}" class="btn btn-secondary" data-i18n="common.cancel">Cancel</a>
+                                {{ form.submit(class="btn btn-primary", **{'data-i18n': 'common.save'}) }}
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header" data-i18n="user.help_title">Help</div>
+            <div class="card-body">
+                <p data-i18n="user.role_help">Roles:</p>
+                <ul>
+                    <li data-i18n="user.role_admin">Admin: Full access to all features</li>
+                    <li data-i18n="user.role_department">Department: Can manage reports and view statistics</li>
+                    <li data-i18n="user.role_unit">Unit: Can submit reports</li>
+                </ul>
+                <p data-i18n="user.password_help">Password must be at least 6 characters long.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

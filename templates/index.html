@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block auth_content %}
+<div class="card shadow-lg border-0">
+    <div class="card-header bg-dark text-center py-4 border-0">
+        <img src="{{ url_for('static', filename='assets/vinatex-logo.svg') }}" alt="Vinatex" height="60" class="mb-3">
+        <h2 class="text-white mb-0" data-i18n="app.welcome">Welcome to Vinatex Report Portal</h2>
+    </div>
+    <div class="card-body p-4">
+        <div class="text-center mb-4">
+            <p class="lead" data-i18n="app.portal_description">
+                Centralized reporting system for Vietnam National Textile and Garment Group
+            </p>
+        </div>
+        <div class="d-grid gap-2">
+            <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg" data-i18n="app.login">Login</a>
+            <div class="mt-3 text-center">
+                <form action="{{ url_for('change_language') }}" method="post">
+                    {{ form.hidden_tag() if form else '' }}
+                    <div class="btn-group" role="group">
+                        <button type="submit" name="language" value="en" class="btn btn-sm btn-outline-secondary {% if session.language == 'en' %}active{% endif %}">English</button>
+                        <button type="submit" name="language" value="vi" class="btn btn-sm btn-outline-secondary {% if session.language != 'en' %}active{% endif %}">Tiếng Việt</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

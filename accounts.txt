@@ -1,0 +1,45 @@
+Vinatex Report Portal - Account Information
+===========================================
+
+Username: admin
+Password: admin  # Same as username for initial setup
+Email: admin@vinatex.com.vn
+Role: admin
+Organization: Tập đoàn Dệt May Việt Nam
+-------------------------------------------
+Username: finance_admin
+Password: finance_admin  # Same as username for initial setup
+Email: finance@vinatex.com.vn
+Role: department
+Organization: Ban Tài chính Kế toán
+-------------------------------------------
+Username: planning_admin
+Password: planning_admin  # Same as username for initial setup
+Email: planning@vinatex.com.vn
+Role: department
+Organization: Ban Kế hoạch Đầu tư
+-------------------------------------------
+Username: production_admin
+Password: production_admin  # Same as username for initial setup
+Email: production@vinatex.com.vn
+Role: department
+Organization: Ban Sản xuất
+-------------------------------------------
+Username: hoatho_admin
+Password: hoatho_admin  # Same as username for initial setup
+Email: admin@hoatho.com.vn
+Role: unit
+Organization: Tổng Công ty CP Dệt May Hòa Thọ
+-------------------------------------------
+Username: hanosimex_admin
+Password: hanosimex_admin  # Same as username for initial setup
+Email: admin@hanosimex.com.vn
+Role: unit
+Organization: Tổng Công ty CP Dệt May Hà Nội
+-------------------------------------------
+Username: phongphu_admin
+Password: phongphu_admin  # Same as username for initial setup
+Email: admin@phongphu.com.vn
+Role: unit
+Organization: Tổng Công ty CP Phong Phú
+-------------------------------------------

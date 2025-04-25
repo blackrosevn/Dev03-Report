@@ -1,0 +1,45 @@
+Vinatex Report Portal - Organizations
+====================================
+
+Name: Tập đoàn Dệt May Việt Nam
+English Name: Vietnam National Textile and Garment Group
+Code: VINATEX
+Parent: None
+Description: Tập đoàn Dệt May Việt Nam
+-------------------------------------------
+Name: Ban Tài chính Kế toán
+English Name: Finance and Accounting Department
+Code: BTCKT
+Parent: Tập đoàn Dệt May Việt Nam
+Description: Ban Tài chính Kế toán - Tập đoàn Dệt May Việt Nam
+-------------------------------------------
+Name: Ban Kế hoạch Đầu tư
+English Name: Planning and Investment Department
+Code: BKHDT
+Parent: Tập đoàn Dệt May Việt Nam
+Description: Ban Kế hoạch Đầu tư - Tập đoàn Dệt May Việt Nam
+-------------------------------------------
+Name: Ban Sản xuất
+English Name: Production Department
+Code: BSX
+Parent: Tập đoàn Dệt May Việt Nam
+Description: Ban Sản xuất - Tập đoàn Dệt May Việt Nam
+-------------------------------------------
+Name: Tổng Công ty CP Dệt May Hòa Thọ
+English Name: Hoa Tho Textile-Garment Joint Stock Corporation
+Code: HOATHO
+Parent: Tập đoàn Dệt May Việt Nam
+Description: Tổng Công ty CP Dệt May Hòa Thọ
+-------------------------------------------
+Name: Tổng Công ty CP Dệt May Hà Nội
+English Name: Hanoi Textile and Garment Joint Stock Corporation
+Code: HANOSIMEX
+Parent: Tập đoàn Dệt May Việt Nam
+Description: Tổng Công ty CP Dệt May Hà Nội
+-------------------------------------------
+Name: Tổng Công ty CP Phong Phú
+English Name: Phong Phu Corporation
+Code: PHONGPHU
+Parent: Tập đoàn Dệt May Việt Nam
+Description: Tổng Công ty CP Phong Phú
+-------------------------------------------

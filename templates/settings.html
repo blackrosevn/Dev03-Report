@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Settings | Vinatex Report Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2" data-i18n="settings.title">System Settings</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-4">
+                        <h4 data-i18n="settings.sharepoint_settings">Sharepoint Integration</h4>
+                        <div class="mb-3">
+                            <label for="sharepoint_url" class="form-label" data-i18n="settings.sharepoint_url">Sharepoint URL</label>
+                            {{ form.sharepoint_url(class="form-control" + (" is-invalid" if form.sharepoint_url.errors else ""), placeholder="https://vinatex.sharepoint.com/sites/reports") }}
+                            <div class="form-text" data-i18n="settings.sharepoint_url_help">The URL of your Sharepoint site where reports will be stored.</div>
+                            {% for error in form.sharepoint_url.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h4 data-i18n="settings.email_settings">Email Notifications</h4>
+                        <div class="mb-3 form-check form-switch">
+                            {{ form.email_notifications(class="form-check-input") }}
+                            <label class="form-check-label" for="email_notifications" data-i18n="settings.enable_email">Enable Email Notifications</label>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email_reminder_days" class="form-label" data-i18n="settings.reminder_days">Reminder Days</label>
+                            {{ form.email_reminder_days(class="form-control" + (" is-invalid" if form.email_reminder_days.errors else ""), placeholder="7,3,1") }}
+                            <div class="form-text" data-i18n="settings.reminder_days_help">Days before due date to send reminders (comma-separated)</div>
+                            {% for error in form.email_reminder_days.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="smtp_server" class="form-label" data-i18n="settings.smtp_server">SMTP Server</label>
+                            {{ form.smtp_server(class="form-control" + (" is-invalid" if form.smtp_server.errors else ""), placeholder="smtp.office365.com") }}
+                            {% for error in form.smtp_server.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="smtp_port" class="form-label" data-i18n="settings.smtp_port">SMTP Port</label>
+                            {{ form.smtp_port(class="form-control" + (" is-invalid" if form.smtp_port.errors else ""), placeholder="587") }}
+                            {% for error in form.smtp_port.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="smtp_username" class="form-label" data-i18n="settings.smtp_username">SMTP Username</label>
+                            {{ form.smtp_username(class="form-control" + (" is-invalid" if form.smtp_username.errors else ""), placeholder="reports@vinatex.com.vn") }}
+                            {% for error in form.smtp_username.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="smtp_password" class="form-label" data-i18n="settings.smtp_password">SMTP Password</label>
+                            {{ form.smtp_password(class="form-control" + (" is-invalid" if form.smtp_password.errors else "")) }}
+                            <div class="form-text" data-i18n="settings.smtp_password_help">Leave empty to keep the current password</div>
+                            {% for error in form.smtp_password.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary", **{'data-i18n': 'settings.save_settings'}) }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header" data-i18n="settings.help_title">Help</div>
+            <div class="card-body">
+                <h5 data-i18n="settings.sharepoint_help_title">Sharepoint Integration</h5>
+                <p data-i18n="settings.sharepoint_help">Configure the Sharepoint URL where report files will be stored. Files will be organized in folders by date and organization.</p>
+                
+                <h5 data-i18n="settings.email_help_title">Email Notifications</h5>
+                <p data-i18n="settings.email_help">Configure email notifications for report reminders and submissions. Make sure to use valid SMTP settings.</p>
+                
+                <div class="alert alert-info" data-i18n="settings.restart_notice">
+                    Some settings changes may require a system restart to take effect.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
