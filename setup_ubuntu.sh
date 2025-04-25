@@ -73,16 +73,15 @@ WantedBy=multi-user.target
 EOL
 
 # Set correct permissions
-sudo chown -R www-data:www-data ${APP_DIR}
-sudo chmod -R 755 ${APP_DIR}
-sudo chmod 660 ${APP_DIR}/.env
-sudo chmod 660 ${APP_DIR}/vinatex.db
-sudo chmod 775 ${APP_DIR}/instance
-
-# Set permissions
 echo "Setting permissions..."
-sudo chown -R www-data:www-data .
-sudo chmod -R 755 .
+mkdir -p instance
+touch instance/vinatex.db
+touch .env
+
+chmod -R 755 .
+chmod 660 .env
+chmod 660 instance/vinatex.db
+chmod 775 instance
 
 # Start and enable service
 echo "Starting service..."
@@ -92,7 +91,7 @@ sudo systemctl enable vinatex
 
 # Save accounts info
 echo "Saving accounts information..."
-cat > system_accounts.txt << EOL
+cat > ./system_accounts.txt << EOL
 System Accounts Information
 =========================
 
