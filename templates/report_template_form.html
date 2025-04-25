@@ -166,9 +166,10 @@
         
         // Form submit handler
         templateForm.addEventListener('submit', function(e) {
-            e.preventDefault();
+            // Don't prevent the default behavior
+            // Just update the structure field before submitting
             updateStructureField();
-            this.submit();
+            // No need to call this.submit() as we're not preventing default
         });
         
         // Add a new sheet

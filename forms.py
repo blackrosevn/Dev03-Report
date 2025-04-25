@@ -47,11 +47,14 @@ class OrganizationForm(FlaskForm):
     description = TextAreaField('Description')
     parent = SelectField('Parent Organization', coerce=int, validators=[])
     is_active = BooleanField('Active')
+    id = HiddenField('ID')  # Hidden field to store the ID for validation during edits
     submit = SubmitField('Save Organization')
     
     def validate_code(self, code):
         org = Organization.query.filter_by(code=code.data).first()
-        if org and org.id != self.id.data:
+        # Get current org id from the hidden field if it exists
+        current_org_id = int(self.id.data) if self.id.data else None
+        if org and org.id != current_org_id:
             raise ValidationError('That code is already in use. Please choose a different one.')
 
 class ReportTemplateForm(FlaskForm):

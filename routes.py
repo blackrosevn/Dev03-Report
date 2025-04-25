@@ -309,6 +309,7 @@ def edit_organization(org_id):
     
     if request.method == 'GET':
         form.parent.data = organization.parent_id if organization.parent_id else 0
+        form.id.data = org_id  # Set the ID field for validation
     
     if form.validate_on_submit():
         organization.name = form.name.data
@@ -348,10 +349,14 @@ def add_report_template():
     if form.validate_on_submit():
         # Validate JSON structure
         try:
-            structure = json.loads(form.structure.data)
-            # Basic validation
-            if not isinstance(structure, dict) or 'sheets' not in structure:
-                raise ValueError('Invalid template structure')
+            if isinstance(form.structure.data, str):
+                structure = json.loads(form.structure.data)
+                # Basic validation
+                if not isinstance(structure, dict) or 'sheets' not in structure:
+                    raise ValueError('Invalid template structure')
+            else:
+                flash('Invalid template structure: Not a valid string', 'danger')
+                return render_template('report_template_form.html', form=form, add=True)
         except Exception as e:
             flash(f'Invalid template structure: {str(e)}', 'danger')
             return render_template('report_template_form.html', form=form, add=True)
@@ -389,10 +394,14 @@ def edit_report_template(template_id):
     if form.validate_on_submit():
         # Validate JSON structure
         try:
-            structure = json.loads(form.structure.data)
-            # Basic validation
-            if not isinstance(structure, dict) or 'sheets' not in structure:
-                raise ValueError('Invalid template structure')
+            if isinstance(form.structure.data, str):
+                structure = json.loads(form.structure.data)
+                # Basic validation
+                if not isinstance(structure, dict) or 'sheets' not in structure:
+                    raise ValueError('Invalid template structure')
+            else:
+                flash('Invalid template structure: Not a valid string', 'danger')
+                return render_template('report_template_form.html', form=form, edit=True, template=template)
         except Exception as e:
             flash(f'Invalid template structure: {str(e)}', 'danger')
             return render_template('report_template_form.html', form=form, edit=True, template=template)
