@@ -372,30 +372,64 @@ def add_report_template():
         # Validate JSON structure
         try:
             if isinstance(form.structure.data, str):
+                app.logger.debug(f"Structure data: {form.structure.data}")
                 structure = json.loads(form.structure.data)
+                
                 # Basic validation
                 if not isinstance(structure, dict) or 'sheets' not in structure:
-                    raise ValueError('Invalid template structure')
+                    raise ValueError('Invalid template structure: Missing sheets')
+                
+                # Check that sheets is a list and has at least one element
+                if not isinstance(structure['sheets'], list) or len(structure['sheets']) == 0:
+                    raise ValueError('Invalid template structure: No sheets defined')
+                
+                # Check each sheet has a name and fields
+                for i, sheet in enumerate(structure['sheets']):
+                    if 'name' not in sheet or not sheet['name']:
+                        raise ValueError(f'Sheet {i+1} has no name')
+                    
+                    if 'fields' not in sheet or not isinstance(sheet['fields'], list) or len(sheet['fields']) == 0:
+                        raise ValueError(f'Sheet {sheet["name"]} has no fields')
+                    
+                    # Check each field has a name and type
+                    for j, field in enumerate(sheet['fields']):
+                        if 'name' not in field or not field['name']:
+                            raise ValueError(f'Field {j+1} in sheet {sheet["name"]} has no name')
+                        
+                        if 'type' not in field:
+                            raise ValueError(f'Field {field["name"]} in sheet {sheet["name"]} has no type')
             else:
-                flash('Invalid template structure: Not a valid string', 'danger')
+                flash('Invalid template structure: Not a valid JSON string', 'danger')
                 return render_template('report_template_form.html', form=form, add=True)
+        except json.JSONDecodeError as e:
+            app.logger.error(f"JSON decode error: {str(e)}")
+            flash(f'Invalid template structure: Not valid JSON - {str(e)}', 'danger')
+            return render_template('report_template_form.html', form=form, add=True)
         except Exception as e:
+            app.logger.error(f"Structure validation error: {str(e)}")
             flash(f'Invalid template structure: {str(e)}', 'danger')
             return render_template('report_template_form.html', form=form, add=True)
         
-        template = ReportTemplate(
-            name=form.name.data,
-            name_en=form.name_en.data,
-            description=form.description.data,
-            created_by=current_user.id,
-            is_active=form.is_active.data,
-            structure=form.structure.data
-        )
-        db.session.add(template)
-        db.session.commit()
-        log_action(current_user.id, 'add_report_template', f'Added report template: {template.name}', request.remote_addr)
-        flash('Report template added successfully!', 'success')
-        return redirect(url_for('report_templates'))
+        try:
+            template = ReportTemplate(
+                name=form.name.data,
+                name_en=form.name_en.data,
+                description=form.description.data,
+                created_by=current_user.id,
+                is_active=form.is_active.data,
+                structure=form.structure.data
+            )
+            db.session.add(template)
+            db.session.commit()
+            log_action(current_user.id, 'add_report_template', f'Added report template: {template.name}', request.remote_addr)
+            app.logger.info(f"Successfully added template: {template.name} (ID: {template.id})")
+            flash('Report template added successfully!', 'success')
+            return redirect(url_for('report_templates'))
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"Error saving template: {str(e)}")
+            flash(f'Error saving report template: {str(e)}', 'danger')
+            return render_template('report_template_form.html', form=form, add=True)
     
     return render_template('report_template_form.html', form=form, add=True)
 
@@ -417,27 +451,61 @@ def edit_report_template(template_id):
         # Validate JSON structure
         try:
             if isinstance(form.structure.data, str):
+                app.logger.debug(f"Structure data: {form.structure.data}")
                 structure = json.loads(form.structure.data)
+                
                 # Basic validation
                 if not isinstance(structure, dict) or 'sheets' not in structure:
-                    raise ValueError('Invalid template structure')
+                    raise ValueError('Invalid template structure: Missing sheets')
+                
+                # Check that sheets is a list and has at least one element
+                if not isinstance(structure['sheets'], list) or len(structure['sheets']) == 0:
+                    raise ValueError('Invalid template structure: No sheets defined')
+                
+                # Check each sheet has a name and fields
+                for i, sheet in enumerate(structure['sheets']):
+                    if 'name' not in sheet or not sheet['name']:
+                        raise ValueError(f'Sheet {i+1} has no name')
+                    
+                    if 'fields' not in sheet or not isinstance(sheet['fields'], list) or len(sheet['fields']) == 0:
+                        raise ValueError(f'Sheet {sheet["name"]} has no fields')
+                    
+                    # Check each field has a name and type
+                    for j, field in enumerate(sheet['fields']):
+                        if 'name' not in field or not field['name']:
+                            raise ValueError(f'Field {j+1} in sheet {sheet["name"]} has no name')
+                        
+                        if 'type' not in field:
+                            raise ValueError(f'Field {field["name"]} in sheet {sheet["name"]} has no type')
             else:
-                flash('Invalid template structure: Not a valid string', 'danger')
+                flash('Invalid template structure: Not a valid JSON string', 'danger')
                 return render_template('report_template_form.html', form=form, edit=True, template=template)
+        except json.JSONDecodeError as e:
+            app.logger.error(f"JSON decode error: {str(e)}")
+            flash(f'Invalid template structure: Not valid JSON - {str(e)}', 'danger')
+            return render_template('report_template_form.html', form=form, edit=True, template=template)
         except Exception as e:
+            app.logger.error(f"Structure validation error: {str(e)}")
             flash(f'Invalid template structure: {str(e)}', 'danger')
             return render_template('report_template_form.html', form=form, edit=True, template=template)
         
-        template.name = form.name.data
-        template.name_en = form.name_en.data
-        template.description = form.description.data
-        template.is_active = form.is_active.data
-        template.structure = form.structure.data
-        template.updated_at = datetime.utcnow()
-        db.session.commit()
-        log_action(current_user.id, 'edit_report_template', f'Edited report template: {template.name}', request.remote_addr)
-        flash('Report template updated successfully!', 'success')
-        return redirect(url_for('report_templates'))
+        try:
+            template.name = form.name.data
+            template.name_en = form.name_en.data
+            template.description = form.description.data
+            template.is_active = form.is_active.data
+            template.structure = form.structure.data
+            template.updated_at = datetime.utcnow()
+            db.session.commit()
+            log_action(current_user.id, 'edit_report_template', f'Edited report template: {template.name}', request.remote_addr)
+            app.logger.info(f"Successfully updated template: {template.name} (ID: {template.id})")
+            flash('Report template updated successfully!', 'success')
+            return redirect(url_for('report_templates'))
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"Error updating template: {str(e)}")
+            flash(f'Error updating report template: {str(e)}', 'danger')
+            return render_template('report_template_form.html', form=form, edit=True, template=template)
     
     return render_template('report_template_form.html', form=form, edit=True, template=template)
 
@@ -909,33 +977,48 @@ def initialize_sample_data():
     
     # Check if there are already templates
     if ReportTemplate.query.first():
-        flash('Sample data already exists. Initialization skipped.', 'info')
+        flash('Sample data already exists. To reset, please use the database management tools.', 'info')
         return redirect(url_for('dashboard'))
     
     # Add sample report templates
     for template_data in SAMPLE_REPORT_TEMPLATES:
-        template = ReportTemplate(
-            name=template_data['name'],
-            name_en=template_data['name_en'],
-            description=template_data['description'],
-            created_by=current_user.id,
-            is_active=True,
-            structure=json.dumps(template_data['structure'])
-        )
-        db.session.add(template)
+        try:
+            template = ReportTemplate(
+                name=template_data['name'],
+                name_en=template_data['name_en'],
+                description=template_data['description'],
+                created_by=current_user.id,
+                is_active=True,
+                structure=json.dumps(template_data['structure'])
+            )
+            db.session.add(template)
+            db.session.flush()  # Flush to get the template ID without committing
+            app.logger.info(f"Added template: {template.name}, ID: {template.id}")
+        except Exception as e:
+            app.logger.error(f"Error adding template {template_data['name']}: {str(e)}")
+            flash(f"Error adding template {template_data['name']}: {str(e)}", 'danger')
+            db.session.rollback()
+            return redirect(url_for('dashboard'))
     
-    # Add default settings
+    # Add default settings if they don't exist
     for key, value in DEFAULT_SETTINGS.items():
-        setting = Settings(
-            key=key,
-            value=value,
-            description=key
-        )
-        db.session.add(setting)
+        if not Settings.query.filter_by(key=key).first():
+            setting = Settings(
+                key=key,
+                value=value,
+                description=key
+            )
+            db.session.add(setting)
     
-    db.session.commit()
-    log_action(current_user.id, 'initialize_sample_data', 'Initialized sample data', request.remote_addr)
-    flash('Sample data initialized successfully!', 'success')
+    try:
+        db.session.commit()
+        log_action(current_user.id, 'initialize_sample_data', 'Initialized sample data', request.remote_addr)
+        flash('Sample data initialized successfully!', 'success')
+    except Exception as e:
+        app.logger.error(f"Error committing sample data: {str(e)}")
+        flash(f"Error saving sample data: {str(e)}", 'danger')
+        db.session.rollback()
+    
     return redirect(url_for('dashboard'))
 
 @app.errorhandler(404)

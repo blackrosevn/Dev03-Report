@@ -166,10 +166,48 @@
         
         // Form submit handler
         templateForm.addEventListener('submit', function(e) {
-            // Don't prevent the default behavior
-            // Just update the structure field before submitting
+            e.preventDefault(); // Prevent default for validation
+            
+            // Update the structure field
             updateStructureField();
-            // No need to call this.submit() as we're not preventing default
+            
+            // Validate structure field has data
+            const structureObj = JSON.parse(structureField.value);
+            if (!structureObj.sheets || structureObj.sheets.length === 0) {
+                alert('Please add at least one sheet with fields to your template.');
+                return;
+            }
+            
+            // Check each sheet has a name and at least one field
+            let isValid = true;
+            structureObj.sheets.forEach(sheet => {
+                if (!sheet.name) {
+                    alert('Each sheet must have a name.');
+                    isValid = false;
+                    return;
+                }
+                
+                if (!sheet.fields || sheet.fields.length === 0) {
+                    alert(`Sheet "${sheet.name}" must have at least one field.`);
+                    isValid = false;
+                    return;
+                }
+                
+                // Check all fields have names
+                sheet.fields.forEach(field => {
+                    if (!field.name) {
+                        alert(`All fields in sheet "${sheet.name}" must have names.`);
+                        isValid = false;
+                        return;
+                    }
+                });
+            });
+            
+            if (isValid) {
+                console.log('Form is valid, submitting...');
+                console.log('Structure:', structureField.value);
+                this.submit(); // Submit the form if all validation passes
+            }
         });
         
         // Add a new sheet
