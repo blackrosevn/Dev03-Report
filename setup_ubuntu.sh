@@ -14,13 +14,13 @@ pip3 install flask flask-login flask-sqlalchemy flask-wtf flask-babel gunicorn p
 
 # Setup PostgreSQL
 echo "Setting up PostgreSQL..."
-sudo -u postgres psql -c "CREATE USER vinatex WITH PASSWORD 'vinatex@2024';"
+sudo -u postgres psql -c "CREATE USER vinatex WITH PASSWORD 'vinatex2024';"
 sudo -u postgres psql -c "CREATE DATABASE vinatex OWNER vinatex;"
 
 # Configure environment variables
 echo "Configuring environment variables..."
 cat > .env << EOL
-DATABASE_URL=postgresql://vinatex:vinatex@2024@localhost/vinatex
+DATABASE_URL=postgresql://vinatex:vinatex2024@localhost/vinatex
 SESSION_SECRET=vinatex-report-portal-secret-$(openssl rand -hex 12)
 FLASK_APP=main.py
 FLASK_ENV=production
