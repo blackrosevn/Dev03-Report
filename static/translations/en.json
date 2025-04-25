@@ -37,7 +37,8 @@
     "no_upcoming_deadlines": "No upcoming deadlines in the next 7 days.",
     "no_recent_submissions": "No recent submissions.",
     "view_reports": "View Reports",
-    "initialize_data": "Initialize Sample Data"
+    "initialize_data": "Initialize Sample Data",
+    "initialize_assignments": "Initialize Sample Assignments"
   },
   "templates": {
     "title": "Report Templates",

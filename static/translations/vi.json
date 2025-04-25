@@ -37,7 +37,8 @@
     "no_upcoming_deadlines": "Không có báo cáo nào sắp đến hạn trong 7 ngày tới.",
     "no_recent_submissions": "Không có báo cáo nào được nộp gần đây.",
     "view_reports": "Xem báo cáo",
-    "initialize_data": "Khởi tạo dữ liệu mẫu"
+    "initialize_data": "Khởi tạo dữ liệu mẫu",
+    "initialize_assignments": "Khởi tạo phân công mẫu"
   },
   "templates": {
     "title": "Mẫu báo cáo",
