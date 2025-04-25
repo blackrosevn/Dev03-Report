@@ -1,0 +1,23 @@
+Xây dựng Hệ thống quản lý báo cáo tổng hợp dành cho Tập đoàn Dệt May Việt Nam (Vinatex) với giao diện 2 ngôn ngữ chính (Tiếng Anh, Tiếng Việt) Full stack:
+ 
+
+Tổng quan hệ thống:
+Vinatex Report Portal là hệ thống quản lý báo cáo tập trung, giúp Tập đoàn Dệt May Việt Nam (Vinatex) thu thập, xử lý và trực quan hóa báo cáo từ các đơn vị thành viên. Hệ thống được thiết kế để đơn giản hóa quy trình báo cáo, đảm bảo tính nhất quán và cải thiện hiệu quả quản lý thông tin.
+
+Chức năng chính:
+Quản lý mẫu báo cáo: Tạo, chỉnh sửa và xóa các mẫu báo cáo với các trường dữ liệu tùy chỉnh.
+Gán báo cáo cho đơn vị: Phân công các báo cáo cần nộp cho từng đơn vị thành viên
+Nộp báo cáo: Giao diện thân thiện cho các đơn vị thành viên để nộp báo cáo
+Theo dõi trạng thái: Theo dõi tiến độ nộp báo cáo của các đơn vị thành viên
+Thống kê và biểu đồ: Hiển thị tổng quan về tình trạng báo cáo
+Xuất và nhập Excel: Hỗ trợ xuất/nhập dữ liệu từ Excel để thuận tiện trong việc làm việc với dữ liệu
+Quản lý người dùng: Phân quyền người dùng với các vai trò khác nhau (Admin, Ban chức năng, Đơn vị thành viên)
+Quản lý đơn vị: Quản lý thông tin các đơn vị thành viên trong tập đoàn
+Vai trò người dùng
+Quản trị viên (Admin): Có quyền truy cập đầy đủ vào tất cả các chức năng của hệ thống
+Ban chức năng (Department): Có thể xem và quản lý báo cáo theo chức năng của ban
+Đơn vị thành viên (Unit): Xem và nộp các báo cáo được giao
+Xây dựng trên CSDL free và các công nghệ có khả năng mở rộng về sau. Quá trình cài đặt hệ thống tự động sinh các tài khoản quản trị cơ sở dữ liệu, tài khoản người dùng theo phân cấp và lưu tất cả trong file accounts.txt. Tạo danh sách mẫu một số đơn vị thành viên, phòng ban trong Tập đoàn Vinatex và lưu thông tin trong file Organizations.txt. Tạo các biểu mẫu báo cáo mẫu (Báo cáo tài chính, Báo cáo sản xuất, Báo cáo tình hình SXKD Ban Sợi, Báo cáo tình hình SXKD Ban May, Báo cáo Nhân sự...) và lưu thông tin danh sách này tại file reports.txt. Tạo file install.sh triển khai cài đặt tự động toàn bộ hệ thống trên môi trường máy chủ Ubuntu 22 hoặc 24 với thông tin account là gsm mật khẩu gsm
+
+Hãy Việt hóa toàn bộ giao diện, bảng biểu. Menu "Cài đặt" hãy thêm các chức năng cho phép cấu hình đường dẫn Sharepoint của đơn vị, bật tắt các thông báo nhắc nhở nộp báo cáo qua email...
+•	Khi người dùng submit báo cáo sẽ được lưu thành file excel theo các sheet khác nhau (Người quản trị sẽ quy định sheet nào chứa những trường dữ liệu nào khi tạo form mẫu báo cáo), với đường dẫn thư mục trên sharepoint được cấu hình trước đó (quản trị hệ thống có thể thay đổi được đường dẫn URL này).
