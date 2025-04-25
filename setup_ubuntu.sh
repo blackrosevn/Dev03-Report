@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 # Update system
@@ -56,8 +55,8 @@ Description=Vinatex Report Portal
 After=network.target
 
 [Service]
-User=www-data
-Group=www-data
+User=$USER
+Group=$USER
 WorkingDirectory=${APP_DIR}
 Environment="PATH=/usr/local/bin"
 EnvironmentFile=${APP_DIR}/.env
