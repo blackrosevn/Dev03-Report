@@ -48,6 +48,8 @@ sudo systemctl restart nginx
 
 # Create systemd service
 echo "Creating systemd service..."
+APP_DIR=$(pwd)
+
 sudo tee /etc/systemd/system/vinatex.service << EOL
 [Unit]
 Description=Vinatex Report Portal
@@ -55,14 +57,24 @@ After=network.target
 
 [Service]
 User=www-data
-WorkingDirectory=$(pwd)
+Group=www-data
+WorkingDirectory=${APP_DIR}
 Environment="PATH=/usr/local/bin"
-EnvironmentFile=$(pwd)/.env
-ExecStart=/usr/local/bin/gunicorn --workers 3 --bind 127.0.0.1:5000 main:app
+EnvironmentFile=${APP_DIR}/.env
+ExecStart=/usr/local/bin/gunicorn --workers 3 --bind 0.0.0.0:5000 main:app
+Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
 EOL
+
+# Set correct permissions
+sudo chown -R www-data:www-data ${APP_DIR}
+sudo chmod -R 755 ${APP_DIR}
+sudo chmod 660 ${APP_DIR}/.env
+sudo chmod 660 ${APP_DIR}/vinatex.db
+sudo chmod 775 ${APP_DIR}/instance
 
 # Set permissions
 echo "Setting permissions..."
