@@ -57,7 +57,7 @@ After=network.target
 [Service]
 User=$USER
 Group=$USER
-WorkingDirectory=${APP_DIR}
+WorkingDirectory=$(pwd)
 Environment="PATH=/usr/local/bin"
 EnvironmentFile=${APP_DIR}/.env
 ExecStart=/usr/local/bin/gunicorn --workers 3 --bind 0.0.0.0:5000 main:app
