@@ -47,8 +47,47 @@
                     
                     <div class="d-grid gap-2 d-md-flex justify-content-md-between">
                         <a href="{{ url_for('report_templates') }}" class="btn btn-secondary" data-i18n="common.cancel">Cancel</a>
-                        {{ form.submit(class="btn btn-primary", id="saveButton", **{'data-i18n': 'common.save'}) }}
+                        <button type="submit" class="btn btn-primary" id="saveButton" data-i18n="common.save">Save</button>
                     </div>
+                    <script>
+                        document.getElementById('templateForm').addEventListener('submit', function(e) {
+                            e.preventDefault();
+                            
+                            // Gather all sheets and their fields
+                            const sheets = [];
+                            document.querySelectorAll('.sheet-card').forEach(sheetCard => {
+                                const sheetNameVi = sheetCard.querySelector('.sheet-name-vi').value;
+                                const sheetNameEn = sheetCard.querySelector('.sheet-name-en').value;
+                                
+                                const fields = [];
+                                sheetCard.querySelectorAll('.field-row').forEach(fieldRow => {
+                                    fields.push({
+                                        name: fieldRow.querySelector('.field-name').value,
+                                        type: fieldRow.querySelector('.field-type').value,
+                                        label_vi: fieldRow.querySelector('.field-label-vi').value,
+                                        label_en: fieldRow.querySelector('.field-label-en').value,
+                                        required: fieldRow.querySelector('.field-required').checked
+                                    });
+                                });
+                                
+                                if (sheetNameVi && fields.length > 0) {
+                                    sheets.push({
+                                        name: sheetNameVi,
+                                        name_en: sheetNameEn,
+                                        fields: fields
+                                    });
+                                }
+                            });
+                            
+                            // Set the structure field value
+                            document.getElementById('structureField').value = JSON.stringify({
+                                sheets: sheets
+                            });
+                            
+                            // Submit the form
+                            this.submit();
+                        });
+                    </script>
                 </form>
             </div>
         </div>
