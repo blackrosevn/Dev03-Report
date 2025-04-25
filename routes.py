@@ -234,27 +234,49 @@ def edit_user(user_id):
     
     return render_template('register.html', form=form, edit=True)
 
-@app.route('/delete_user/<int:user_id>', methods=['POST'])
+@app.route('/toggle_user_status/<int:user_id>', methods=['POST'])
 @login_required
-def delete_user(user_id):
-    # Only admin can delete users
+def toggle_user_status(user_id):
+    # Only admin can toggle user status
     if not current_user.is_admin():
         flash('You do not have permission to access this page.', 'danger')
         return redirect(url_for('dashboard'))
     
     user = User.query.get_or_404(user_id)
     
-    # Don't allow deleting the current user
+    # Cannot toggle status of the current user
     if user.id == current_user.id:
-        flash('You cannot delete your own account.', 'danger')
+        flash('You cannot change your own account status.', 'danger')
         return redirect(url_for('user_management'))
     
-    # Instead of deleting, mark as inactive
-    user.is_active = False
+    # Toggle the active status
+    user.is_active = not user.is_active
+    
+    if user.is_active:
+        action_type = 'activate_user'
+        message = f'Activated user: {user.username}'
+        flash_message = 'User activated successfully!'
+    else:
+        action_type = 'deactivate_user'
+        message = f'Deactivated user: {user.username}'
+        flash_message = 'User deactivated successfully!'
+    
     db.session.commit()
-    log_action(current_user.id, 'deactivate_user', f'Deactivated user: {user.username}', request.remote_addr)
-    flash('User deactivated successfully!', 'success')
+    log_action(current_user.id, action_type, message, request.remote_addr)
+    flash(flash_message, 'success')
     return redirect(url_for('user_management'))
+
+@app.route('/delete_user/<int:user_id>', methods=['POST'])
+@login_required
+def delete_user(user_id):
+    # For backwards compatibility, just call toggle_user_status
+    user = User.query.get_or_404(user_id)
+    if user.is_active:  # Only deactivate if currently active
+        return toggle_user_status(user_id)
+    else:
+        # Already inactive
+        flash('User is already deactivated.', 'info')
+        return redirect(url_for('user_management'))
 
 @app.route('/organization_management')
 @login_required
@@ -484,29 +506,40 @@ def add_report_assignment():
         return redirect(url_for('dashboard'))
     
     form = ReportAssignmentForm()
-    form.report_template.choices = [(t.id, t.name) for t in ReportTemplate.query.filter_by(is_active=True).all()]
+    form.report_templates.choices = [(t.id, t.name) for t in ReportTemplate.query.filter_by(is_active=True).all()]
     
     # Department users can only assign to their department's organizations
     if current_user.is_admin():
-        form.organization.choices = [(o.id, o.name) for o in Organization.query.filter_by(is_active=True).all()]
+        form.organizations.choices = [(o.id, o.name) for o in Organization.query.filter_by(is_active=True).all()]
     else:
         # For department users, we'd need to filter organizations by department
         # This would require a relationship between departments and organizations
         # For now, let's assume department users can assign to all organizations
-        form.organization.choices = [(o.id, o.name) for o in Organization.query.filter_by(is_active=True).all()]
+        form.organizations.choices = [(o.id, o.name) for o in Organization.query.filter_by(is_active=True).all()]
     
     if form.validate_on_submit():
-        assignment = ReportAssignment(
-            report_template_id=form.report_template.data,
-            organization_id=form.organization.data,
-            due_date=form.due_date.data,
-            frequency=ReportFrequency(form.frequency.data),
-            status=ReportStatus.PENDING
-        )
-        db.session.add(assignment)
+        # Create multiple assignments based on the cross-product of templates and organizations
+        assignments_count = 0
+        for template_id in form.report_templates.data:
+            for org_id in form.organizations.data:
+                assignment = ReportAssignment(
+                    report_template_id=template_id,
+                    organization_id=org_id,
+                    due_date=form.due_date.data,
+                    frequency=ReportFrequency(form.frequency.data),
+                    status=ReportStatus.PENDING
+                )
+                db.session.add(assignment)
+                assignments_count += 1
+        
         db.session.commit()
-        log_action(current_user.id, 'add_report_assignment', f'Added report assignment ID: {assignment.id}', request.remote_addr)
-        flash('Report assignment added successfully!', 'success')
+        log_action(
+            current_user.id, 
+            'add_report_assignment', 
+            f'Added {assignments_count} report assignments', 
+            request.remote_addr
+        )
+        flash(f'{assignments_count} report assignments added successfully!', 'success')
         return redirect(url_for('report_assignments'))
     
     return render_template('report_assignments.html', form=form, add=True)

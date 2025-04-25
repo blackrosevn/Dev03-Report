@@ -8,7 +8,7 @@
     {% if current_user.is_admin() or current_user.is_department() %}
     <div class="btn-toolbar mb-2 mb-md-0">
         <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addAssignmentModal">
-            <i data-feather="plus"></i> <span data-i18n="assignments.add_assignment">Assign Report</span>
+            <i data-feather="plus"></i> <span data-i18n="assignments.add_assignment">Assign Reports</span>
         </button>
     </div>
     {% endif %}
@@ -19,21 +19,23 @@
 <div class="row">
     <div class="col-md-8">
         <div class="card mb-4">
-            <div class="card-header" data-i18n="assignments.add_title">Assign a Report</div>
+            <div class="card-header" data-i18n="assignments.add_title">Assign Reports</div>
             <div class="card-body">
                 <form method="post">
                     {{ form.hidden_tag() }}
                     <div class="mb-3">
-                        <label for="report_template" class="form-label" data-i18n="assignments.report_template">Report Template</label>
-                        {{ form.report_template(class="form-select" + (" is-invalid" if form.report_template.errors else "")) }}
-                        {% for error in form.report_template.errors %}
+                        <label for="report_templates" class="form-label" data-i18n="assignments.report_templates">Report Templates</label>
+                        {{ form.report_templates(class="form-select" + (" is-invalid" if form.report_templates.errors else "")) }}
+                        <small class="form-text text-muted" data-i18n="assignments.multiple_select_help">Hold Ctrl (or Cmd) to select multiple templates</small>
+                        {% for error in form.report_templates.errors %}
                         <div class="invalid-feedback">{{ error }}</div>
                         {% endfor %}
                     </div>
                     <div class="mb-3">
-                        <label for="organization" class="form-label" data-i18n="assignments.organization">Organization</label>
-                        {{ form.organization(class="form-select" + (" is-invalid" if form.organization.errors else "")) }}
-                        {% for error in form.organization.errors %}
+                        <label for="organizations" class="form-label" data-i18n="assignments.organizations">Organizations</label>
+                        {{ form.organizations(class="form-select" + (" is-invalid" if form.organizations.errors else "")) }}
+                        <small class="form-text text-muted" data-i18n="assignments.multiple_select_help">Hold Ctrl (or Cmd) to select multiple organizations</small>
+                        {% for error in form.organizations.errors %}
                         <div class="invalid-feedback">{{ error }}</div>
                         {% endfor %}
                     </div>
@@ -128,31 +130,33 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addAssignmentModalLabel" data-i18n="assignments.add_title">Assign a Report</h5>
+                <h5 class="modal-title" id="addAssignmentModalLabel" data-i18n="assignments.add_title">Assign Reports</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="post" action="{{ url_for('add_report_assignment') }}">
                 <div class="modal-body">
                     {{ form.hidden_tag() if form }}
                     <div class="mb-3">
-                        <label for="report_template" class="form-label" data-i18n="assignments.report_template">Report Template</label>
-                        <select name="report_template" id="report_template" class="form-select" required>
-                            {% if form and form.report_template.choices %}
-                                {% for value, label in form.report_template.choices %}
+                        <label for="report_templates" class="form-label" data-i18n="assignments.report_templates">Report Templates</label>
+                        <select name="report_templates" id="report_templates" class="form-select" multiple="multiple" size="6" required>
+                            {% if form and form.report_templates.choices %}
+                                {% for value, label in form.report_templates.choices %}
                                 <option value="{{ value }}">{{ label }}</option>
                                 {% endfor %}
                             {% endif %}
                         </select>
+                        <small class="form-text text-muted" data-i18n="assignments.multiple_select_help">Hold Ctrl (or Cmd) to select multiple templates</small>
                     </div>
                     <div class="mb-3">
-                        <label for="organization" class="form-label" data-i18n="assignments.organization">Organization</label>
-                        <select name="organization" id="organization" class="form-select" required>
-                            {% if form and form.organization.choices %}
-                                {% for value, label in form.organization.choices %}
+                        <label for="organizations" class="form-label" data-i18n="assignments.organizations">Organizations</label>
+                        <select name="organizations" id="organizations" class="form-select" multiple="multiple" size="6" required>
+                            {% if form and form.organizations.choices %}
+                                {% for value, label in form.organizations.choices %}
                                 <option value="{{ value }}">{{ label }}</option>
                                 {% endfor %}
                             {% endif %}
                         </select>
+                        <small class="form-text text-muted" data-i18n="assignments.multiple_select_help">Hold Ctrl (or Cmd) to select multiple organizations</small>
                     </div>
                     <div class="mb-3">
                         <label for="due_date" class="form-label" data-i18n="assignments.due_date">Due Date</label>
@@ -173,7 +177,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="common.cancel">Cancel</button>
-                    <button type="submit" class="btn btn-primary" data-i18n="assignments.assign">Assign Report</button>
+                    <button type="submit" class="btn btn-primary" data-i18n="assignments.assign">Assign Reports</button>
                 </div>
             </form>
         </div>

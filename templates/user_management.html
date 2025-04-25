@@ -55,22 +55,32 @@
                         {% endif %}
                     </div>
                     
-                    <!-- Delete Modal -->
+                    <!-- Status Toggle Modal -->
                     <div class="modal fade" id="deleteModal{{ user.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ user.id }}" aria-hidden="true">
                         <div class="modal-dialog">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="modal-title" id="deleteModalLabel{{ user.id }}" data-i18n="users.deactivate_confirm">Confirm Deactivation</h5>
+                                    <h5 class="modal-title" id="deleteModalLabel{{ user.id }}" data-i18n="users.status_confirm">
+                                        {% if user.is_active %}Confirm Deactivation{% else %}Confirm Activation{% endif %}
+                                    </h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
+                                    {% if user.is_active %}
                                     <p data-i18n="users.deactivate_warning">Are you sure you want to deactivate this user? They will no longer be able to log in.</p>
+                                    {% else %}
+                                    <p data-i18n="users.activate_warning">Are you sure you want to activate this user? They will be able to log in again.</p>
+                                    {% endif %}
                                     <p><strong>{{ user.fullname }} ({{ user.username }})</strong></p>
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="common.cancel">Cancel</button>
-                                    <form action="{{ url_for('delete_user', user_id=user.id) }}" method="post">
+                                    <form action="{{ url_for('toggle_user_status', user_id=user.id) }}" method="post">
+                                        {% if user.is_active %}
                                         <button type="submit" class="btn btn-danger" data-i18n="users.deactivate">Deactivate</button>
+                                        {% else %}
+                                        <button type="submit" class="btn btn-success" data-i18n="users.activate">Activate</button>
+                                        {% endif %}
                                     </form>
                                 </div>
                             </div>

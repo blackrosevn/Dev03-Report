@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SelectField, TextAreaField, FileField, DateField, HiddenField, SubmitField
+from wtforms import StringField, PasswordField, BooleanField, SelectField, SelectMultipleField, TextAreaField, FileField, DateField, HiddenField, SubmitField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError
 from models import User, Organization
 
@@ -66,8 +66,10 @@ class ReportTemplateForm(FlaskForm):
     submit = SubmitField('Save Template')
 
 class ReportAssignmentForm(FlaskForm):
-    report_template = SelectField('Report Template', coerce=int, validators=[DataRequired()])
-    organization = SelectField('Organization', coerce=int, validators=[DataRequired()])
+    report_templates = SelectMultipleField('Report Templates', coerce=int, validators=[DataRequired()], 
+                                          render_kw={"class": "form-select", "size": "6", "multiple": "multiple"})
+    organizations = SelectMultipleField('Organizations', coerce=int, validators=[DataRequired()],
+                                        render_kw={"class": "form-select", "size": "6", "multiple": "multiple"})
     due_date = DateField('Due Date', validators=[DataRequired()])
     frequency = SelectField('Frequency', validators=[DataRequired()], choices=[
         ('daily', 'Daily'),
@@ -78,7 +80,7 @@ class ReportAssignmentForm(FlaskForm):
         ('annually', 'Annually'),
         ('one_time', 'One-Time')
     ])
-    submit = SubmitField('Assign Report')
+    submit = SubmitField('Assign Reports')
 
 class ReportSubmissionForm(FlaskForm):
     notes = TextAreaField('Notes')
