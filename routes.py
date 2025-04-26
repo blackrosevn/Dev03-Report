@@ -370,23 +370,23 @@ def add_report_template():
 
     if form.validate_on_submit():
         app.logger.info(f"Form data: {form.data}")
-        
+
         try:
             structure = json.loads(form.structure.data)
             if not structure or not isinstance(structure, dict) or 'sheets' not in structure:
                 flash('Invalid template structure', 'danger')
                 return render_template('report_template_form.html', form=form, add=True)
-                
+
             if not structure['sheets']:
                 flash('Template must have at least one sheet', 'danger')
                 return render_template('report_template_form.html', form=form, add=True)
-                
+
             # Validate sheet structure
             for sheet in structure['sheets']:
                 if not sheet.get('fields'):
                     flash('Each sheet must have at least one field', 'danger')
                     return render_template('report_template_form.html', form=form, add=True)
-                
+
             template = ReportTemplate(
                 name=form.name.data,
                 name_en=form.name_en.data,
@@ -395,13 +395,13 @@ def add_report_template():
                 is_active=form.is_active.data,
                 structure=form.structure.data
             )
-            
+
             db.session.add(template)
             db.session.commit()
-            
+
             flash('Report template created successfully!', 'success')
             return redirect(url_for('report_templates'))
-            
+
         except Exception as e:
             app.logger.error(f"Error creating template: {str(e)}")
             flash(f'Error creating template: {str(e)}', 'danger')
@@ -619,18 +619,18 @@ def add_report_assignment():
         return redirect(url_for('dashboard'))
 
     form = ReportAssignmentForm()
-    
+
     # Load active templates
     templates = ReportTemplate.query.filter_by(is_active=True).all()
     form.report_templates.choices = [(t.id, f"{t.name} ({t.name_en})" if t.name_en else t.name) for t in templates]
-    
+
     # Load active organizations
     if current_user.is_admin():
         orgs = Organization.query.filter_by(is_active=True).all()
     else:
         # For department users, only show related organizations
         orgs = Organization.query.filter_by(is_active=True, parent_id=current_user.organization_id).all()
-    
+
     form.organizations.choices = [(o.id, f"{o.name} ({o.code})") for o in orgs]
 
     # Department users can only assign to their department's organizations
@@ -737,8 +737,6 @@ def submit_report(assignment_id):
                         template_structure=json.loads(template.structure)
                     )
 
-            # Generate Excel file from form data
-            try:
                 # Get settings
                 sharepoint_setting = Settings.query.filter_by(key='sharepoint_url').first()
                 sharepoint_url = sharepoint_setting.value if sharepoint_setting else DEFAULT_SETTINGS['sharepoint_url']
@@ -761,8 +759,46 @@ def submit_report(assignment_id):
                 # Set Sharepoint path
                 sharepoint_path = f"{sharepoint_url}/{filepath}"
 
-            except Exception as e:
-                flash(f'Error generating Excel file: {str(e)}', 'danger')
+            elif 'file' in request.files and request.files['file'].filename:
+                # Process file upload
+                file = request.files['file']
+                try:
+                    # Get settings
+                    sharepoint_setting = Settings.query.filter_by(key='sharepoint_url').first()
+                    sharepoint_url = sharepoint_setting.value if sharepoint_setting else DEFAULT_SETTINGS['sharepoint_url']
+
+                    # Create directory structure
+                    today = datetime.now().strftime('%Y-%m-%d')
+                    org_code = organization.code
+                    template_name = template.name.replace(' ', '_')
+                    directory = f"reports/{today}/{org_code}/{template_name}"
+                    os.makedirs(directory, exist_ok=True)
+
+                    # Generate filename
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    original_filename = file.filename
+                    extension = original_filename.rsplit('.', 1)[1].lower() if '.' in original_filename else 'xlsx'
+                    filename = f"{org_code}_{template_name}_{timestamp}.{extension}"
+                    filepath = os.path.join(directory, filename)
+
+                    # Save file
+                    file.save(filepath)
+
+                    # Set Sharepoint path
+                    sharepoint_path = f"{sharepoint_url}/{filepath}"
+
+                except Exception as e:
+                    flash(f'Error uploading file: {str(e)}', 'danger')
+                    return render_template(
+                        'report_submission.html',
+                        form=form,
+                        assignment=assignment,
+                        template=template,
+                        organization=organization
+                    )
+
+            else:
+                flash('Please submit either form data or a file.', 'danger')
                 return render_template(
                     'report_submission.html',
                     form=form,
@@ -771,77 +807,66 @@ def submit_report(assignment_id):
                     organization=organization
                 )
 
-        elif 'file' in request.files and request.files['file'].filename:
-            # Process file upload
-            file = request.files['file']
-            try:
-                # Get settings
-                sharepoint_setting = Settings.query.filter_by(key='sharepoint_url').first()
-                sharepoint_url = sharepoint_setting.value if sharepoint_setting else DEFAULT_SETTINGS['sharepoint_url']
-
-                # Create directory structure
-                today = datetime.now().strftime('%Y-%m-%d')
-                org_code = organization.code
-                template_name = template.name.replace(' ', '_')
-                directory = f"reports/{today}/{org_code}/{template_name}"
-                os.makedirs(directory, exist_ok=True)
-
-                # Generate filename
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                original_filename = file.filename
-                extension = original_filename.rsplit('.', 1)[1].lower() if '.' in original_filename else 'xlsx'
-                filename = f"{org_code}_{template_name}_{timestamp}.{extension}"
-                filepath = os.path.join(directory, filename)
-
-                # Save file                file.save(filepath)
-
-                # Set Sharepoint path
-                sharepoint_path = f"{sharepoint_url}/{filepath}"
-
-            except Exception as e:
-                flash(f'Error uploading file: {str(e)}', 'danger')
-                return render_template(
-                    'report_submission.html',
-                    form=form,
-                    assignment=assignment,
-                    template=template,
-                    organization=organization
-                )
-
-        else:
-            flash('Please submit either form data or a file.', 'danger')
-            return render_template(
-                'report_submission.html',
-                form=form,
-                assignment=assignment,
-                template=template,
-                organization=organization
+            # Create submission record
+            submission = ReportSubmission(
+                report_assignment_id=assignment_id,
+                submitted_by=current_user.id,
+                sharepoint_path=sharepoint_path,
+                filename=filename,
+                notes=form.notes.data,
+                form_data=submitted_data
             )
+            db.session.add(submission)
 
-        # Create submission record
-        submission = ReportSubmission(
-            report_assignment_id=assignment_id,
-            submitted_by=current_user.id,
-            sharepoint_path=sharepoint_path,
-            filename=filename,
-            notes=form.notes.data,
-            form_data=submitted_data
-        )
-        db.session.add(submission)
+            # Update assignment status
+            assignment.status = ReportStatus.SUBMITTED
 
-        # Update assignment status
-        assignment.status = ReportStatus.SUBMITTED
+            try:
+                db.session.commit()
+                log_action(current_user.id, 'submit_report', f'Submitted report for assignment ID: {assignment.id}', request.remote_addr)
+                app.logger.info(f"Report submitted successfully for assignment {assignment.id}")
+                flash('Report submitted successfully!', 'success')
+                return redirect(url_for('report_assignments'))
+            except Exception as e:
+                db.session.rollback()
+                app.logger.error(f"Error submitting report: {str(e)}")
+                flash(f'Error submitting report: {str(e)}', 'danger')
+                return render_template(
+                    'report_submission.html',
+                    form=form,
+                    assignment=assignment,
+                    template=template,
+                    organization=organization,
+                    template_structure=json.loads(template.structure)
+                )
 
-        try:
-            db.session.commit()
-            log_action(current_user.id, 'submit_report', f'Submitted report for assignment ID: {assignment.id}', request.remote_addr)
-            app.logger.info(f"Report submitted successfully for assignment {assignment.id}")
+            # Send notification email (if enabled)
+            email_setting = Settings.query.filter_by(key='email_notifications').first()
+            if email_setting and email_setting.value == 'True':
+                # Find department users to notify
+                if current_user.role.name == 'unit':
+                    department_users = User.query.join(Role).filter(Role.name == 'department').all()
+                    for user in department_users:
+                        subject = f"New report submission: {template.name}"
+                        body = f"""
+                        A new report has been submitted:
+
+                        Organization: {organization.name}
+                        Report: {template.name}
+                        Submitted by: {current_user.fullname}
+                        Submission time: {submission.submitted_at}
+
+                        Please log in to review the report.
+                        """
+                        send_email(user.email, subject, body)
+
             flash('Report submitted successfully!', 'success')
             return redirect(url_for('report_assignments'))
+
         except Exception as e:
             db.session.rollback()
-            app.logger.error(f"Error submitting report: {str(e)}")
-            flash(f'Error submitting report: {str(e)}', 'danger')
+            app.logger.exception(f"An unexpected error occurred: {e}")
+            flash(f'An unexpected error occurred: {str(e)}', 'danger')
             return render_template(
                 'report_submission.html',
                 form=form,
@@ -850,29 +875,6 @@ def submit_report(assignment_id):
                 organization=organization,
                 template_structure=json.loads(template.structure)
             )
-
-        # Send notification email (if enabled)
-        email_setting = Settings.query.filter_by(key='email_notifications').first()
-        if email_setting and email_setting.value == 'True':
-            # Find department users to notify
-            if current_user.role.name == 'unit':
-                department_users = User.query.join(Role).filter(Role.name == 'department').all()
-                for user in department_users:
-                    subject = f"New report submission: {template.name}"
-                    body = f"""
-                    A new report has been submitted:
-
-                    Organization: {organization.name}
-                    Report: {template.name}
-                    Submitted by: {current_user.fullname}
-                    Submission time: {submission.submitted_at}
-
-                    Please log in to review the report.
-                    """
-                    send_email(user.email, subject, body)
-
-        flash('Report submitted successfully!', 'success')
-        return redirect(url_for('report_assignments'))
 
     # Get the structure of the template for rendering the form
     template_structure = json.loads(template.structure)
@@ -1114,29 +1116,29 @@ def initialize_sample_assignments():
     if not current_user.is_admin():
         flash('You do not have permission to access this page.', 'danger')
         return redirect(url_for('dashboard'))
-    
+
     # Check if there are already assignments
     if ReportAssignment.query.first():
         flash('Sample assignments already exist. To reset, please use the database management tools.', 'info')
         return redirect(url_for('dashboard'))
-    
+
     # Get templates
     templates = ReportTemplate.query.filter_by(is_active=True).all()
     if not templates:
         flash('No report templates found. Please initialize sample data first.', 'warning')
         return redirect(url_for('dashboard'))
-    
+
     # Get organizations (excluding root Vinatex)
     orgs = Organization.query.filter(Organization.parent_id.isnot(None)).filter_by(is_active=True).all()
     if not orgs:
         flash('No member organizations found. Please add member organizations first.', 'warning')
         return redirect(url_for('dashboard'))
-    
+
     # Create assignments
     assignments_count = 0
     today = datetime.now()
     next_month = today + timedelta(days=30)
-    
+
     try:
         # Financial reports for all orgs
         financial_template = ReportTemplate.query.filter(ReportTemplate.name.like('%tài chính%')).first()
@@ -1151,7 +1153,7 @@ def initialize_sample_assignments():
                 )
                 db.session.add(assignment)
                 assignments_count += 1
-        
+
         # Production reports for all orgs
         production_template = ReportTemplate.query.filter(ReportTemplate.name.like('%sản xuất%')).first()
         if production_template:
@@ -1165,7 +1167,7 @@ def initialize_sample_assignments():
                 )
                 db.session.add(assignment)
                 assignments_count += 1
-        
+
         # Investment plan for specific orgs (first 3)
         investment_template = ReportTemplate.query.filter(ReportTemplate.name.like('%kế hoạch đầu tư%')).first()
         if investment_template and len(orgs) >= 3:
@@ -1179,7 +1181,7 @@ def initialize_sample_assignments():
                 )
                 db.session.add(assignment)
                 assignments_count += 1
-        
+
         # Create a past-due assignment for demonstration
         if financial_template and orgs:
             last_month = today - timedelta(days=15)
@@ -1192,16 +1194,16 @@ def initialize_sample_assignments():
             )
             db.session.add(assignment)
             assignments_count += 1
-        
+
         db.session.commit()
         log_action(current_user.id, 'initialize_sample_assignments', f'Initialized {assignments_count} sample assignments', request.remote_addr)
         flash(f'Successfully created {assignments_count} sample report assignments!', 'success')
-    
+
     except Exception as e:
         db.session.rollback()
         app.logger.error(f"Error creating sample assignments: {str(e)}")
         flash(f'Error creating sample assignments: {str(e)}', 'danger')
-    
+
     return redirect(url_for('report_assignments'))
 
 @app.errorhandler(404)
