@@ -207,45 +207,48 @@
         templateForm.addEventListener('submit', function(e) {
             e.preventDefault(); // Prevent default for validation
             
-            // Update the structure field
+            // Update the structure field with current form data
             updateStructureField();
             
-            // Validate structure field has data
+            // Parse the structure data
             const structureObj = JSON.parse(structureField.value);
-            if (!structureObj.sheets || structureObj.sheets.length === 0) {
-                alert('Please add at least one sheet with fields to your template.');
+            const sheets = document.querySelectorAll('.sheet-card');
+            
+            // Check if any sheets exist
+            if (sheets.length === 0) {
+                alert('Please add at least one sheet to your template.');
                 return;
             }
             
-            // Check each sheet has a name and at least one field
+            // Check each sheet
             let isValid = true;
-            structureObj.sheets.forEach(sheet => {
-                if (!sheet.name) {
+            let hasFields = false;
+            
+            sheets.forEach(sheetCard => {
+                const sheetName = sheetCard.querySelector('.sheet-name').value;
+                const fields = sheetCard.querySelectorAll('.field-card');
+                
+                if (!sheetName) {
                     alert('Each sheet must have a name.');
                     isValid = false;
                     return;
                 }
                 
-                if (!sheet.fields || sheet.fields.length === 0) {
-                    alert(`Sheet "${sheet.name}" must have at least one field.`);
-                    isValid = false;
-                    return;
-                }
-                
-                // Check all fields have names
-                sheet.fields.forEach(field => {
-                    if (!field.name) {
-                        alert(`All fields in sheet "${sheet.name}" must have names.`);
-                        isValid = false;
-                        return;
+                fields.forEach(fieldCard => {
+                    const fieldName = fieldCard.querySelector('.field-name').value;
+                    if (fieldName) {
+                        hasFields = true;
                     }
                 });
             });
             
-            if (isValid) {
-                console.log('Form is valid, submitting...');
-                console.log('Structure:', structureField.value);
-                this.submit(); // Submit the form if all validation passes
+            if (!hasFields) {
+                alert('Please add at least one field to your template.');
+                return;
+            }
+            
+            if (isValid && hasFields) {
+                this.submit();
             }
         });
         
