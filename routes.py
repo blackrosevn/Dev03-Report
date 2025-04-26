@@ -132,7 +132,7 @@ def dashboard():
         submitted_reports = ReportAssignment.query.filter_by(organization_id=org_id, status=ReportStatus.SUBMITTED).count()
         overdue_reports = ReportAssignment.query.filter_by(organization_id=org_id, status=ReportStatus.OVERDUE).count()
 
-        # Recent submissions from this organization
+        # Recent submissions from this organization only
         recent_submissions = db.session.query(
             ReportSubmission, User, Organization, ReportTemplate
         ).join(
@@ -144,12 +144,12 @@ def dashboard():
         ).join(
             ReportTemplate, ReportAssignment.report_template_id == ReportTemplate.id
         ).filter(
-            ReportAssignment.organization_id == org_id
+            Organization.id == org_id
         ).order_by(
             ReportSubmission.submitted_at.desc()
         ).limit(10).all()
 
-        # Upcoming deadlines for this organization
+        # Upcoming deadlines for this organization only
         upcoming_deadlines = db.session.query(
             ReportAssignment, Organization, ReportTemplate
         ).join(
@@ -157,7 +157,7 @@ def dashboard():
         ).join(
             ReportTemplate, ReportAssignment.report_template_id == ReportTemplate.id
         ).filter(
-            ReportAssignment.organization_id == org_id,
+            Organization.id == org_id,
             ReportAssignment.status == ReportStatus.PENDING,
             ReportAssignment.due_date >= datetime.utcnow(),
             ReportAssignment.due_date <= datetime.utcnow() + timedelta(days=7)
@@ -713,15 +713,29 @@ def submit_report(assignment_id):
     form = ReportSubmissionForm()
 
     if form.validate_on_submit():
-        # Process the submission
-        submitted_data = None
-        sharepoint_path = None
-        filename = None
+        try:
+            # Process the submission
+            submitted_data = None
+            sharepoint_path = None
+            filename = None
+            app.logger.info("Processing form submission...")
+            app.logger.debug(f"Form data: {form.form_data.data}")
 
-        # Check if there's form data or a file
-        if form.form_data.data:
-            # Process form data
-            submitted_data = form.form_data.data
+            # Check if there's form data or a file
+            if form.form_data.data:
+                app.logger.info("Processing form data submission")
+                # Process form data
+                submitted_data = form.form_data.data
+                if not submitted_data:
+                    flash('Please fill in the required data.', 'danger')
+                    return render_template(
+                        'report_submission.html',
+                        form=form,
+                        assignment=assignment,
+                        template=template,
+                        organization=organization,
+                        template_structure=json.loads(template.structure)
+                    )
 
             # Generate Excel file from form data
             try:
@@ -818,8 +832,24 @@ def submit_report(assignment_id):
         # Update assignment status
         assignment.status = ReportStatus.SUBMITTED
 
-        db.session.commit()
-        log_action(current_user.id, 'submit_report', f'Submitted report for assignment ID: {assignment.id}', request.remote_addr)
+        try:
+            db.session.commit()
+            log_action(current_user.id, 'submit_report', f'Submitted report for assignment ID: {assignment.id}', request.remote_addr)
+            app.logger.info(f"Report submitted successfully for assignment {assignment.id}")
+            flash('Report submitted successfully!', 'success')
+            return redirect(url_for('report_assignments'))
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"Error submitting report: {str(e)}")
+            flash(f'Error submitting report: {str(e)}', 'danger')
+            return render_template(
+                'report_submission.html',
+                form=form,
+                assignment=assignment,
+                template=template,
+                organization=organization,
+                template_structure=json.loads(template.structure)
+            )
 
         # Send notification email (if enabled)
         email_setting = Settings.query.filter_by(key='email_notifications').first()
