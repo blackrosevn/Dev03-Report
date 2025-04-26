@@ -17,7 +17,7 @@
 <div class="row">
     <!-- Completion Rate Chart -->
     <div class="col-md-6 mb-4">
-        <div class="card h-100">
+        <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0" data-i18n="overview.completion_rate">Report Completion Rate by Organization</h5>
             </div>
@@ -26,10 +26,10 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Status Chart -->
     <div class="col-md-6 mb-4">
-        <div class="card h-100">
+        <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0" data-i18n="overview.status_distribution">Report Status Distribution</h5>
             </div>
@@ -103,32 +103,32 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Organization names for chart labels
     const organizations = {{ org_names|tojson }};
-    
+
     // Submission statistics
     const submissionStats = {{ submission_stats|tojson }};
-    
+
     // Monthly data
     const monthlyData = {{ monthly_data|tojson }};
-    
+
     // Extract data for completion rate chart
     const completionRates = submissionStats.map(stat => stat.completion_rate);
     const orgNames = submissionStats.map(stat => stat.organization);
-    
+
     // Aggregate data for status distribution chart
     let totalSubmitted = 0;
     let totalPending = 0;
     let totalOverdue = 0;
-    
+
     submissionStats.forEach(stat => {
         totalSubmitted += stat.submitted;
         totalPending += stat.pending;
         totalOverdue += stat.overdue;
     });
-    
+
     // Extract data for monthly trend chart
     const months = monthlyData.map(data => data.month);
     const counts = monthlyData.map(data => data.count);
-    
+
     // Create charts
     createCompletionRateChart(orgNames, completionRates);
     createStatusDistributionChart(totalSubmitted, totalPending, totalOverdue);
