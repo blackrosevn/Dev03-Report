@@ -917,6 +917,7 @@ def download_report(submission_id):
 
     return send_file(local_path, as_attachment=True, download_name=submission.filename)
 
+
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
@@ -931,20 +932,19 @@ def settings():
     if request.method == 'GET':
         for key in DEFAULT_SETTINGS:
             setting = Settings.query.filter_by(key=key).first()
-            if setting:
-                if hasattr(form, key):
-                    # Special handling for boolean fields
-                    if key == 'email_notifications':
-                        setattr(form, key, setting.value == 'True')
-                    else:
-                        setattr(form, key, setting.value)
+            if setting and hasattr(form, key):
+                field = getattr(form, key)
+                if key == 'email_notifications':
+                    field.data = setting.value == 'True'
+                else:
+                    field.data = setting.value
 
     if form.validate_on_submit():
         # Update settings
         for key in DEFAULT_SETTINGS:
             if hasattr(form, key):
-                value = getattr(form, key)
-                # Special handling for boolean fields
+                field = getattr(form, key)
+                value = field.data
                 if key == 'email_notifications':
                     value = str(value)
 
@@ -961,7 +961,6 @@ def settings():
         return redirect(url_for('settings'))
 
     return render_template('settings.html', form=form)
-
 @app.route('/change_password', methods=['GET', 'POST'])
 @login_required
 def change_password():
