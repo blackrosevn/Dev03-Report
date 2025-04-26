@@ -369,6 +369,34 @@ def add_report_template():
     form = ReportTemplateForm()
 
     if form.validate_on_submit():
+        app.logger.info(f"Form data: {form.data}")
+        app.logger.info(f"Structure: {form.structure.data}")
+        
+        try:
+            structure = json.loads(form.structure.data)
+            if not structure.get('sheets'):
+                flash('Template must have at least one sheet', 'danger')
+                return render_template('report_template_form.html', form=form, add=True)
+                
+            template = ReportTemplate(
+                name=form.name.data,
+                name_en=form.name_en.data,
+                description=form.description.data,
+                created_by=current_user.id,
+                is_active=form.is_active.data,
+                structure=form.structure.data
+            )
+            
+            db.session.add(template)
+            db.session.commit()
+            
+            flash('Report template created successfully!', 'success')
+            return redirect(url_for('report_templates'))
+            
+        except Exception as e:
+            app.logger.error(f"Error creating template: {str(e)}")
+            flash(f'Error creating template: {str(e)}', 'danger')
+            return render_template('report_template_form.html', form=form, add=True)
         # Log the form data for debugging
         app.logger.info(f"Form submitted with data: {form.data}")
         app.logger.info(f"Structure data: {form.structure.data}")
@@ -582,7 +610,19 @@ def add_report_assignment():
         return redirect(url_for('dashboard'))
 
     form = ReportAssignmentForm()
-    form.report_templates.choices = [(t.id, t.name) for t in ReportTemplate.query.filter_by(is_active=True).all()]
+    
+    # Load active templates
+    templates = ReportTemplate.query.filter_by(is_active=True).all()
+    form.report_templates.choices = [(t.id, f"{t.name} ({t.name_en})" if t.name_en else t.name) for t in templates]
+    
+    # Load active organizations
+    if current_user.is_admin():
+        orgs = Organization.query.filter_by(is_active=True).all()
+    else:
+        # For department users, only show related organizations
+        orgs = Organization.query.filter_by(is_active=True, parent_id=current_user.organization_id).all()
+    
+    form.organizations.choices = [(o.id, f"{o.name} ({o.code})") for o in orgs]
 
     # Department users can only assign to their department's organizations
     if current_user.is_admin():
