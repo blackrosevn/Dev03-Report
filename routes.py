@@ -370,13 +370,22 @@ def add_report_template():
 
     if form.validate_on_submit():
         app.logger.info(f"Form data: {form.data}")
-        app.logger.info(f"Structure: {form.structure.data}")
         
         try:
             structure = json.loads(form.structure.data)
-            if not structure.get('sheets'):
+            if not structure or not isinstance(structure, dict) or 'sheets' not in structure:
+                flash('Invalid template structure', 'danger')
+                return render_template('report_template_form.html', form=form, add=True)
+                
+            if not structure['sheets']:
                 flash('Template must have at least one sheet', 'danger')
                 return render_template('report_template_form.html', form=form, add=True)
+                
+            # Validate sheet structure
+            for sheet in structure['sheets']:
+                if not sheet.get('fields'):
+                    flash('Each sheet must have at least one field', 'danger')
+                    return render_template('report_template_form.html', form=form, add=True)
                 
             template = ReportTemplate(
                 name=form.name.data,

@@ -15,7 +15,7 @@
                 <form method="post" id="templateForm">
                     {{ form.hidden_tag() }}
                     {{ form.structure(id="structureField") }}
-                    
+
                     <div class="mb-3">
                         <label for="name" class="form-label" data-i18n="templates.name">Name (Vietnamese)</label>
                         {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
@@ -23,7 +23,7 @@
                         <div class="invalid-feedback">{{ error }}</div>
                         {% endfor %}
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="name_en" class="form-label" data-i18n="templates.name_en">Name (English)</label>
                         {{ form.name_en(class="form-control" + (" is-invalid" if form.name_en.errors else "")) }}
@@ -31,7 +31,7 @@
                         <div class="invalid-feedback">{{ error }}</div>
                         {% endfor %}
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="description" class="form-label" data-i18n="templates.description">Description</label>
                         {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows="3") }}
@@ -39,12 +39,12 @@
                         <div class="invalid-feedback">{{ error }}</div>
                         {% endfor %}
                     </div>
-                    
+
                     <div class="mb-3 form-check">
                         {{ form.is_active(class="form-check-input") }}
                         <label class="form-check-label" for="is_active" data-i18n="templates.is_active">Active</label>
                     </div>
-                    
+
                     <div class="d-grid gap-2 d-md-flex justify-content-md-between">
                         <a href="{{ url_for('report_templates') }}" class="btn btn-secondary" data-i18n="common.cancel">Cancel</a>
                         <button type="submit" class="btn btn-primary" id="saveButton" data-i18n="common.save">Save</button>
@@ -52,13 +52,13 @@
                     <script>
                         document.getElementById('templateForm').addEventListener('submit', function(e) {
                             e.preventDefault();
-                            
+
                             // Gather all sheets and their fields
                             const sheets = [];
                             document.querySelectorAll('.sheet-card').forEach(sheetCard => {
-                                const sheetNameVi = sheetCard.querySelector('.sheet-name-vi').value;
+                                const sheetNameVi = sheetCard.querySelector('.sheet-name').value;
                                 const sheetNameEn = sheetCard.querySelector('.sheet-name-en').value;
-                                
+
                                 const fields = [];
                                 sheetCard.querySelectorAll('.field-row').forEach(fieldRow => {
                                     fields.push({
@@ -69,7 +69,7 @@
                                         required: fieldRow.querySelector('.field-required').checked
                                     });
                                 });
-                                
+
                                 if (sheetNameVi && fields.length > 0) {
                                     sheets.push({
                                         name: sheetNameVi,
@@ -78,12 +78,12 @@
                                     });
                                 }
                             });
-                            
+
                             // Set the structure field value
                             document.getElementById('structureField').value = JSON.stringify({
                                 sheets: sheets
                             });
-                            
+
                             // Submit the form
                             this.submit();
                         });
@@ -92,7 +92,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-6">
         <div class="card mb-4">
             <div class="card-header" data-i18n="templates.form_structure">Form Structure</div>
@@ -101,7 +101,7 @@
                     <div class="mb-3">
                         <button type="button" class="btn btn-outline-primary" id="addSheetBtn" data-i18n="templates.add_sheet">Add Sheet</button>
                     </div>
-                    
+
                     <div id="sheets-container">
                         <!-- Sheets will be added here -->
                     </div>
@@ -182,7 +182,7 @@
         const fieldTemplate = document.getElementById('field-template');
         const saveButton = document.getElementById('saveButton');
         const templateForm = document.getElementById('templateForm');
-        
+
         // Initialize with existing structure if editing
         if (structureField.value) {
             try {
@@ -197,43 +197,43 @@
             // Create a default empty structure
             structureField.value = JSON.stringify({sheets: []});
         }
-        
+
         // Add sheet button click handler
         addSheetBtn.addEventListener('click', function() {
             addSheet();
         });
-        
+
         // Form submit handler
         templateForm.addEventListener('submit', function(e) {
             e.preventDefault(); // Prevent default for validation
-            
+
             // Update the structure field with current form data
             updateStructureField();
-            
+
             // Parse the structure data
             const structureObj = JSON.parse(structureField.value);
             const sheets = document.querySelectorAll('.sheet-card');
-            
+
             // Check if any sheets exist
             if (sheets.length === 0) {
                 alert('Please add at least one sheet to your template.');
                 return;
             }
-            
+
             // Check each sheet
             let isValid = true;
             let hasFields = false;
-            
+
             sheets.forEach(sheetCard => {
                 const sheetName = sheetCard.querySelector('.sheet-name').value;
                 const fields = sheetCard.querySelectorAll('.field-card');
-                
+
                 if (!sheetName) {
                     alert('Each sheet must have a name.');
                     isValid = false;
                     return;
                 }
-                
+
                 fields.forEach(fieldCard => {
                     const fieldName = fieldCard.querySelector('.field-name').value;
                     if (fieldName) {
@@ -241,82 +241,112 @@
                     }
                 });
             });
-            
+
             if (!hasFields) {
                 alert('Please add at least one field to your template.');
                 return;
             }
-            
+
+            // Additional validation for sheet names and fields
+            let isSheetValid = true;
+            sheets.forEach(sheetCard => {
+                const sheetNameVi = sheetCard.querySelector('.sheet-name').value;
+                const fields = sheetCard.querySelectorAll('.field-card');
+
+                if (!sheetNameVi.trim()) {
+                    alert('Each sheet must have a Vietnamese name.');
+                    isSheetValid = false;
+                    return;
+                }
+
+                let hasValidField = false;
+                fields.forEach(field => {
+                    if (field.querySelector('.field-name').value.trim()) {
+                        hasValidField = true;
+                    }
+                });
+
+                if (!hasValidField) {
+                    alert('Each sheet must have at least one valid field.');
+                    isSheetValid = false;
+                    return;
+                }
+            });
+
+            if (!isSheetValid) {
+                return;
+            }
+
             if (isValid && hasFields) {
                 this.submit();
             }
         });
-        
+
         // Add a new sheet
         function addSheet() {
             const sheetNode = sheetTemplate.content.cloneNode(true);
             const sheetCard = sheetNode.querySelector('.sheet-card');
-            
+
             // Add field button click handler
             sheetCard.querySelector('.add-field-btn').addEventListener('click', function() {
                 addField(sheetCard.querySelector('.fields-container'));
             });
-            
+
             // Remove sheet button click handler
             sheetCard.querySelector('.remove-sheet-btn').addEventListener('click', function() {
                 sheetCard.remove();
             });
-            
+
             sheetsContainer.appendChild(sheetCard);
-            
+
             // Add a default field to the new sheet
             addField(sheetCard.querySelector('.fields-container'));
-            
+
             // Update the structure field
             updateStructureField();
         }
-        
+
         // Add a new field to a sheet
         function addField(container) {
             const fieldNode = fieldTemplate.content.cloneNode(true);
             const fieldCard = fieldNode.querySelector('.field-card');
-            
+
             // Remove field button click handler
             fieldCard.querySelector('.remove-field-btn').addEventListener('click', function() {
                 fieldCard.remove();
                 updateStructureField();
             });
-            
+
             // Update structure on field change
             fieldCard.querySelectorAll('input, select').forEach(element => {
                 element.addEventListener('change', updateStructureField);
             });
-            
+
             container.appendChild(fieldCard);
-            
+
             // Update the structure field
             updateStructureField();
         }
-        
+
         // Update the hidden structure field with the current structure
         function updateStructureField() {
             const structure = {
                 sheets: []
             };
-            
+
             // Get all sheets
             document.querySelectorAll('.sheet-card').forEach(sheetCard => {
                 const sheetName = sheetCard.querySelector('.sheet-name').value;
                 const sheetNameEn = sheetCard.querySelector('.sheet-name-en').value;
-                
+
                 if (!sheetName) return; // Skip sheets with no name
-                
+
                 const sheet = {
                     name: sheetName,
                     name_en: sheetNameEn,
                     fields: []
                 };
-                
+
                 // Get all fields in this sheet
                 sheetCard.querySelectorAll('.field-card').forEach(fieldCard => {
                     const fieldName = fieldCard.querySelector('.field-name').value;
@@ -324,9 +354,9 @@
                     const fieldLabel = fieldCard.querySelector('.field-label').value;
                     const fieldLabelEn = fieldCard.querySelector('.field-label-en').value;
                     const fieldRequired = fieldCard.querySelector('.field-required').checked;
-                    
+
                     if (!fieldName) return; // Skip fields with no name
-                    
+
                     sheet.fields.push({
                         name: fieldName,
                         label: fieldLabel,
@@ -335,73 +365,73 @@
                         required: fieldRequired
                     });
                 });
-                
+
                 structure.sheets.push(sheet);
             });
-            
+
             structureField.value = JSON.stringify(structure);
         }
-        
+
         // Initialize the form with an existing structure
         function initializeStructure(structure) {
             // Clear existing sheets
             sheetsContainer.innerHTML = '';
-            
+
             // Add each sheet
             structure.sheets.forEach(sheet => {
                 const sheetNode = sheetTemplate.content.cloneNode(true);
                 const sheetCard = sheetNode.querySelector('.sheet-card');
-                
+
                 // Set sheet name
                 sheetCard.querySelector('.sheet-name').value = sheet.name;
                 sheetCard.querySelector('.sheet-name-en').value = sheet.name_en || '';
-                
+
                 // Add field button click handler
                 sheetCard.querySelector('.add-field-btn').addEventListener('click', function() {
                     addField(sheetCard.querySelector('.fields-container'));
                 });
-                
+
                 // Remove sheet button click handler
                 sheetCard.querySelector('.remove-sheet-btn').addEventListener('click', function() {
                     sheetCard.remove();
                     updateStructureField();
                 });
-                
+
                 sheetsContainer.appendChild(sheetCard);
-                
+
                 const fieldsContainer = sheetCard.querySelector('.fields-container');
-                
+
                 // Add each field to this sheet
                 sheet.fields.forEach(field => {
                     const fieldNode = fieldTemplate.content.cloneNode(true);
                     const fieldCard = fieldNode.querySelector('.field-card');
-                    
+
                     // Set field values
                     fieldCard.querySelector('.field-name').value = field.name;
                     fieldCard.querySelector('.field-type').value = field.type;
                     fieldCard.querySelector('.field-label').value = field.label;
                     fieldCard.querySelector('.field-label-en').value = field.label_en || '';
                     fieldCard.querySelector('.field-required').checked = field.required;
-                    
+
                     // Remove field button click handler
                     fieldCard.querySelector('.remove-field-btn').addEventListener('click', function() {
                         fieldCard.remove();
                         updateStructureField();
                     });
-                    
+
                     // Update structure on field change
                     fieldCard.querySelectorAll('input, select').forEach(element => {
                         element.addEventListener('change', updateStructureField);
                     });
-                    
+
                     fieldsContainer.appendChild(fieldCard);
                 });
             });
-            
+
             // Update the structure field (just to be safe)
             updateStructureField();
         }
-        
+
         // Add at least one sheet if there are none
         if (sheetsContainer.children.length === 0) {
             addSheet();
