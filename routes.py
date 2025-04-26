@@ -721,46 +721,45 @@ def submit_report(assignment_id):
             app.logger.info("Processing form submission...")
             app.logger.debug(f"Form data: {form.form_data.data}")
 
-            try:
-                # Check if there's form data or a file
-                if form.form_data.data:
-                    app.logger.info("Processing form data submission")
-                    # Process form data
-                    submitted_data = form.form_data.data
-                    if not submitted_data:
-                        flash('Please fill in the required data.', 'danger')
-                        return render_template(
-                            'report_submission.html',
-                            form=form,
-                            assignment=assignment,
-                            template=template,
-                            organization=organization,
-                            template_structure=json.loads(template.structure)
-                        )
+            # Check if there's form data or a file
+            if form.form_data.data:
+                app.logger.info("Processing form data submission")
+                # Process form data
+                submitted_data = form.form_data.data
+                if not submitted_data:
+                    flash('Please fill in the required data.', 'danger')
+                    return render_template(
+                        'report_submission.html',
+                        form=form,
+                        assignment=assignment,
+                        template=template,
+                        organization=organization,
+                        template_structure=json.loads(template.structure)
+                    )
 
-                    # Get settings
-                    sharepoint_setting = Settings.query.filter_by(key='sharepoint_url').first()
-                    sharepoint_url = sharepoint_setting.value if sharepoint_setting else DEFAULT_SETTINGS['sharepoint_url']
+                # Get settings
+                sharepoint_setting = Settings.query.filter_by(key='sharepoint_url').first()
+                sharepoint_url = sharepoint_setting.value if sharepoint_setting else DEFAULT_SETTINGS['sharepoint_url']
 
-                    # Create directory structure
-                    today = datetime.now().strftime('%Y-%m-%d')
-                    org_code = organization.code
-                    template_name = template.name.replace(' ', '_')
-                    directory = f"reports/{today}/{org_code}/{template_name}"
-                    os.makedirs(directory, exist_ok=True)
+                # Create directory structure
+                today = datetime.now().strftime('%Y-%m-%d')
+                org_code = organization.code
+                template_name = template.name.replace(' ', '_')
+                directory = f"reports/{today}/{org_code}/{template_name}"
+                os.makedirs(directory, exist_ok=True)
 
-                    # Generate filename
-                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                    filename = f"{org_code}_{template_name}_{timestamp}.xlsx"
-                    filepath = os.path.join(directory, filename)
+                # Generate filename
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                filename = f"{org_code}_{template_name}_{timestamp}.xlsx"
+                filepath = os.path.join(directory, filename)
 
-                    # Generate Excel 
-                    generate_excel(json.loads(submitted_data), template.get_structure(), filepath)
+                # Generate Excel
+                generate_excel(json.loads(submitted_data), template.get_structure(), filepath)
 
-                    # Set Sharepoint path
-                    sharepoint_path = f"{sharepoint_url}/{filepath}"
+                # Set Sharepoint path
+                sharepoint_path = f"{sharepoint_url}/{filepath}"
 
-                elif 'file' in request.files and request.files['file'].filename:
+            elif 'file' in request.files and request.files['file'].filename:
                 # Process file upload
                 file = request.files['file']
                 try:
