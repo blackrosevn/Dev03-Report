@@ -575,41 +575,34 @@ def delete_report_template(template_id):
     flash('Report template deleted successfully!', 'success')
     return redirect(url_for('report_templates'))
 
-@app.route('/report_assignments')
+@app.route('/report_assignments', methods=['GET'])
 @login_required
 def report_assignments():
-    # Filter assignments based on user role
+    form = ReportAssignmentForm()
+
+    templates = ReportTemplate.query.filter_by(is_active=True).all()
+    form.report_templates.choices = [(t.id, f"{t.name} ({t.name_en})" if t.name_en else t.name) for t in templates]
+
     if current_user.is_admin():
-        assignments = db.session.query(
-            ReportAssignment, Organization, ReportTemplate
-        ).join(
-            Organization, ReportAssignment.organization_id == Organization.id
-        ).join(
-            ReportTemplate, ReportAssignment.report_template_id == ReportTemplate.id
-        ).all()
-    elif current_user.is_department():
-        # Department users can see all assignments but might want to filter by their department
-        assignments = db.session.query(
-            ReportAssignment, Organization, ReportTemplate
-        ).join(
-            Organization, ReportAssignment.organization_id == Organization.id
-        ).join(
-            ReportTemplate, ReportAssignment.report_template_id == ReportTemplate.id
-        ).all()
+        orgs = Organization.query.filter_by(is_active=True).all()
     else:
-        # Unit users can only see their own assignments
-        assignments = db.session.query(
-            ReportAssignment, Organization, ReportTemplate
-        ).join(
-            Organization, ReportAssignment.organization_id == Organization.id
-        ).join(
-            ReportTemplate, ReportAssignment.report_template_id == ReportTemplate.id
-        ).filter(
-            ReportAssignment.organization_id == current_user.organization_id
-        ).all()
+        orgs = Organization.query.filter_by(is_active=True).all()
 
-    return render_template('report_assignments.html', assignments=assignments)
+    form.organizations.choices = [(o.id, f"{o.name} ({o.code})" if o.code else o.name) for o in orgs]
 
+    if current_user.is_admin() or current_user.is_department():
+        assignments = db.session.query(ReportAssignment, Organization, ReportTemplate)\
+            .join(Organization, ReportAssignment.organization_id == Organization.id)\
+            .join(ReportTemplate, ReportAssignment.report_template_id == ReportTemplate.id)\
+            .all()
+    else:
+        assignments = db.session.query(ReportAssignment, Organization, ReportTemplate)\
+            .join(Organization, ReportAssignment.organization_id == Organization.id)\
+            .join(ReportTemplate, ReportAssignment.report_template_id == ReportTemplate.id)\
+            .filter(ReportAssignment.organization_id == current_user.organization_id)\
+            .all()
+
+    return render_template('report_assignments.html', assignments=assignments, form=form)
 @app.route('/add_report_assignment', methods=['GET', 'POST'])
 @login_required
 def add_report_assignment():
