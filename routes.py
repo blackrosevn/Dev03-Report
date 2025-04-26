@@ -393,17 +393,18 @@ def add_report_template():
                 description=form.description.data,
                 created_by=current_user.id,
                 is_active=form.is_active.data,
-                structure=form.structure.data
+                structure=json.dumps(structure) # Fix: Ensure structure is properly JSON encoded
             )
 
             db.session.add(template)
             db.session.commit()
-
+            app.logger.info(f"Successfully created template: {template.name} (ID: {template.id})")
             flash('Report template created successfully!', 'success')
             return redirect(url_for('report_templates'))
 
         except Exception as e:
             app.logger.error(f"Error creating template: {str(e)}")
+            db.session.rollback()
             flash(f'Error creating template: {str(e)}', 'danger')
             return render_template('report_template_form.html', form=form, add=True)
         # Log the form data for debugging
@@ -718,8 +719,7 @@ def submit_report(assignment_id):
             submitted_data = None
             sharepoint_path = None
             filename = None
-            app.logger.info("Processing form submission...")
-            app.logger.debug(f"Form data: {form.form_data.data}")
+            app.logger.info("Processing form submission...")app.logger.debug(f"Form data: {form.form_data.data}")
 
             # Check if there's form data or a file
             if form.form_data.data:
