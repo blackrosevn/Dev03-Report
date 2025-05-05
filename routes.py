@@ -1210,6 +1210,17 @@ def internal_server_error(e):
 def forbidden(e):
     return render_template('error.html', error="403 - Forbidden"), 403
 
+
+
+@app.route('/powerbi')
+@login_required
+def powerbi():
+    try:
+        powerbi_url = os.getenv("POWERBI_REPORT_URL", "")
+        return render_template("powerbi.html", powerbi_url=powerbi_url)
+    except Exception as e:
+        return f"ERROR: {e}"
+
 @app.errorhandler(400)
 def bad_request(e):
     return render_template('error.html', error="400 - Bad Request"), 400
