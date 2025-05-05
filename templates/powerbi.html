@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Báo cáo Power BI{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Báo cáo Power BI</h2>
+    <iframe title="Power BI Report"
+            width="100%"
+            height="800"
+            src="{{ powerbi_url }}"
+            frameborder="0"
+            allowFullScreen="true"></iframe>
+</div>
+{% endblock %}
