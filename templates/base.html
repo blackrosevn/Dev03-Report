@@ -50,6 +50,13 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'powerbi' %}active{% endif %}" href="{{ url_for('powerbi') }}">
+                                <i data-feather="bar-chart"></i>
+                                <span>Báo cáo Power BI</span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'report_assignments' %}active{% endif %}" href="{{ url_for('report_assignments') }}">
                                 <i data-feather="clipboard"></i>
                                 <span data-i18n="menu.reports">Reports</span>
